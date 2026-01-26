@@ -1,41 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useUIStore } from '../stores/ui';
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-}
-
-const toasts = ref<Toast[]>([]);
-let nextId = 1;
-
-const show = (message: string, type: Toast['type'] = 'info', duration = 3000) => {
-  const id = nextId++;
-  toasts.value.push({ id, message, type });
-
-  setTimeout(() => {
-    remove(id);
-  }, duration);
-};
+const uiStore = useUIStore();
 
 const remove = (id: number) => {
-  const index = toasts.value.findIndex(t => t.id === id);
-  if (index > -1) {
-    toasts.value.splice(index, 1);
-  }
+  uiStore.removeToast(id);
 };
-
-defineExpose({
-  show
-});
 </script>
 
 <template>
   <div class="toast-container">
     <TransitionGroup name="toast">
       <div
-        v-for="toast in toasts"
+        v-for="toast in uiStore.toasts"
         :key="toast.id"
         :class="['toast', `toast-${toast.type}`]"
         @click="remove(toast.id)"

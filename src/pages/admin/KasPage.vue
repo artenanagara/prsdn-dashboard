@@ -5,11 +5,13 @@ import CardStat from '../../components/CardStat.vue';
 import { useKasStore } from '../../stores/kas';
 import { useMembersStore } from '../../stores/members';
 import { useFinanceStore } from '../../stores/finance';
+import { useUIStore } from '../../stores/ui';
 import { Save } from 'lucide-vue-next';
 
 const kasStore = useKasStore();
 const membersStore = useMembersStore();
 const financeStore = useFinanceStore();
+const uiStore = useUIStore();
 
 const currentYear = new Date().getFullYear();
 const selectedYear = ref(currentYear >= 2026 ? currentYear : 2026);
@@ -187,10 +189,10 @@ const saveMonthPayments = async () => {
       }))
     );
 
-    alert('Data kas berhasil disimpan dan transaksi keuangan telah dibuat!');
+    uiStore.showToast('Data kas berhasil disimpan!', 'success');
   } catch (error) {
     console.error(error);
-    alert('Gagal menyimpan data kas. Pastikan koneksi aman dan database terhubung.');
+    uiStore.showToast('Gagal menyimpan data kas. Silakan cek koneksi.', 'error');
   }
 };
 
@@ -216,25 +218,24 @@ const formatCurrency = (amount: number) => {
       <!-- Summary Cards -->
       <div class="stats-grid mb-6">
         <CardStat
-          title="Saldo Kas"
+          title="Saldo Kas (Total)"
           :value="formatCurrency(kasBalance)"
           variant="primary"
         />
         <CardStat
-          title="Belum Bayar Bulan Ini"
-          :value="kasStore.currentMonthUnpaid"
-          variant="warning"
+          title="Status Pembayaran (Bulan Ini)"
+          :value="`${kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).paidCount} / ${kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).total}`"
+          variant="info"
         />
         <CardStat
-          v-if="selectedMonthKey"
-          title="Terkumpul Bulan Ini"
-          :value="formatCurrency(currentMonthSummary.totalCollected)"
+          title="Uang Masuk (Bulan Ini)"
+          :value="formatCurrency(kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).totalCollected)"
           variant="success"
         />
       </div>
 
       <!-- Year Tabs -->
-      <BaseCard class="mb-4 year-tabs-card">
+      <BaseCard class="mb-4 year-tabs-card card-compact">
         <div class="year-tabs">
           <button
             v-for="year in years"
@@ -373,10 +374,6 @@ const formatCurrency = (amount: number) => {
 <style scoped>
 .kas-page {
   max-width: 1400px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .month-detail-card .table-container {
@@ -414,7 +411,7 @@ const formatCurrency = (amount: number) => {
 }
 
 .year-tab {
-  padding: var(--space-3) var(--space-6);
+  padding: var(--space-2) var(--space-4);
   border: none;
   background: transparent;
   color: var(--color-text-secondary);
@@ -438,11 +435,7 @@ const formatCurrency = (amount: number) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-6);
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
   padding-bottom: var(--space-4);
-  -webkit-overflow-scrolling: touch;
 }
 
 .month-card {

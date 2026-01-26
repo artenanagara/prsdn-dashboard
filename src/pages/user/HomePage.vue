@@ -9,12 +9,14 @@ import { useMembersStore } from '../../stores/members';
 import { useKasStore } from '../../stores/kas';
 import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
+import { useUIStore } from '../../stores/ui';
 
 const authStore = useAuthStore();
 const membersStore = useMembersStore();
 const kasStore = useKasStore();
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
+const uiStore = useUIStore();
 
 const tokenInput = ref('');
 const isSubmitting = ref(false);
@@ -202,12 +204,11 @@ const handleCheckin = async () => {
     const result = await checkinStore.checkin(activeEvent.value.id, member.value.id, tokenInput.value);
 
     if (result.success) {
-        checkinSuccess.value = 'Berhasil melakukan check-in!';
+        uiStore.showToast('Berhasil melakukan check-in!', 'success');
         tokenInput.value = '';
-        // Reload checkins to update UI
         await checkinStore.loadCheckins();
     } else {
-        checkinError.value = result.error || 'Gagal check-in';
+        uiStore.showToast(result.error || 'Gagal check-in', 'error');
     }
     isSubmitting.value = false;
 };

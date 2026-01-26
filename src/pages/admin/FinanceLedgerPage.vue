@@ -3,9 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
 import { useFinanceStore } from '../../stores/finance';
+import { useUIStore } from '../../stores/ui';
 import { Plus, Edit, Trash2 } from 'lucide-vue-next';
 
 const financeStore = useFinanceStore();
+const uiStore = useUIStore();
 
 onMounted(() => {
   document.title = 'Buku Kas - PRSDN Admin';
@@ -27,12 +29,15 @@ const formData = ref({
 });
 
 const filteredTransactions = computed(() => {
+  const allTransactions = [...financeStore.transactions];
+  
   if (filterType.value === 'all') {
-    return financeStore.transactions.sort((a, b) => 
+    return allTransactions.sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
-  return financeStore.transactions
+  
+  return allTransactions
     .filter(t => t.type === filterType.value)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 });
@@ -74,14 +79,23 @@ const handleSubmit = async () => {
   if (success) {
     showModal.value = false;
     resetForm();
+    uiStore.showToast(`Transaksi ${editingTransaction.value ? 'berhasil diperbarui' : 'berhasil ditambahkan'}`, 'success');
   } else {
-    alert('Gagal menyimpan transaksi. Mohon cek koneksi atau database.');
+    uiStore.showToast('Gagal menyimpan transaksi.', 'error');
   }
 };
 
 const handleDelete = async (id: string, title: string) => {
-  if (confirm(`Hapus transaksi "${title}"?`)) {
+  const confirmed = await uiStore.confirm({
+    message: `Hapus transaksi "${title}"?`,
+    title: 'Hapus Transaksi',
+    confirmText: 'Hapus',
+    variant: 'danger'
+  });
+  
+  if (confirmed) {
     await financeStore.deleteTransaction(id);
+    uiStore.showToast(`Transaksi "${title}" berhasil dihapus`, 'success');
   }
 };
 
@@ -124,6 +138,11 @@ const formatDate = (dateString: string) => {
 
       <!-- Summary Cards -->
       <div class="stats-grid mb-6">
+         <CardStat
+          title="Saldo"
+          :value="formatCurrency(financeStore.balance)"
+          variant="primary"
+        />
         <CardStat
           title="Total Pemasukan"
           :value="formatCurrency(financeStore.totalIncome)"
@@ -134,15 +153,10 @@ const formatDate = (dateString: string) => {
           :value="formatCurrency(financeStore.totalExpense)"
           variant="danger"
         />
-        <CardStat
-          title="Saldo"
-          :value="formatCurrency(financeStore.balance)"
-          variant="primary"
-        />
       </div>
 
       <!-- Filter -->
-      <div class="card mb-6">
+      <div class="card card-compact mb-6">
         <div class="card-body">
           <div class="filter-tabs">
             <button
@@ -183,7 +197,15 @@ const formatDate = (dateString: string) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-if="filteredTransactions.length === 0">
+              <tr v-if="financeStore.isLoading">
+                <td colspan="7" class="text-center py-8">
+                  <div class="flex items-center justify-center gap-2 text-secondary">
+                    <span class="loading-spinner"></span>
+                    <span>Memuat data...</span>
+                  </div>
+                </td>
+              </tr>
+              <tr v-else-if="filteredTransactions.length === 0">
                 <td colspan="7" class="text-center text-secondary">
                   Tidak ada transaksi
                 </td>
@@ -299,7 +321,7 @@ const formatDate = (dateString: string) => {
 }
 
 .filter-tab {
-  padding: var(--space-3) var(--space-6);
+  padding: var(--space-2) var(--space-4);
   border: none;
   background: transparent;
   color: var(--color-text-secondary);

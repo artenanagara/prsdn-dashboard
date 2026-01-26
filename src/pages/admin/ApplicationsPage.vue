@@ -3,10 +3,12 @@ import { computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import { useApplicationsStore } from '../../stores/applications';
 import { useAuthStore } from '../../stores/auth';
+import { useUIStore } from '../../stores/ui';
 import { CheckCircle, XCircle } from 'lucide-vue-next';
 
 const applicationsStore = useApplicationsStore();
 const authStore = useAuthStore();
+const uiStore = useUIStore();
 
 const applications = computed(() => applicationsStore.applications);
 
@@ -18,14 +20,26 @@ onMounted(() => {
 });
 
 const handleApprove = async (id: string, name: string) => {
-  if (confirm(`Setujui pendaftaran ${name}?`)) {
+  const confirmed = await uiStore.confirm({
+    message: `Setujui pendaftaran ${name}?`,
+    variant: 'primary'
+  });
+  
+  if (confirmed) {
     await applicationsStore.approveApplication(id, authStore.currentUser!.userId);
+    uiStore.showToast(`Pendaftaran ${name} disetujui`, 'success');
   }
 };
 
 const handleReject = async (id: string, name: string) => {
-  if (confirm(`Tolak pendaftaran ${name}?`)) {
+  const confirmed = await uiStore.confirm({
+    message: `Tolak pendaftaran ${name}?`,
+    variant: 'danger'
+  });
+  
+  if (confirmed) {
     await applicationsStore.rejectApplication(id, authStore.currentUser!.userId);
+    uiStore.showToast(`Pendaftaran ${name} ditolak`, 'error');
   }
 };
 

@@ -10,6 +10,7 @@ import { useEventsStore } from './stores/events';
 import { useAttendanceEventStore } from './stores/attendanceEvent';
 import { useCheckinStore } from './stores/checkin';
 import ToastNotification from './components/ToastNotification.vue';
+import ConfirmModal from './components/ConfirmModal.vue';
 
 const authStore = useAuthStore();
 const membersStore = useMembersStore();
@@ -38,7 +39,8 @@ onMounted(() => {
 <template>
   <div id="app">
     <RouterView />
-    <ToastNotification ref="toast" />
+    <ToastNotification />
+    <ConfirmModal />
   </div>
 </template>
 

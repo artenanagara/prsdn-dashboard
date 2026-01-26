@@ -6,12 +6,14 @@ import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useMembersStore } from '../../stores/members';
 import { useAuthStore } from '../../stores/auth';
+import { useUIStore } from '../../stores/ui';
 import { Plus, Play, Square, RefreshCw, Trash2, Users } from 'lucide-vue-next';
 
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
 const membersStore = useMembersStore();
 const authStore = useAuthStore();
+const uiStore = useUIStore();
 
 const showCreateModal = ref(false);
 const showDetailModal = ref(false);
@@ -67,17 +69,17 @@ const handleCreateEvent = async () => {
   
   // Validate required fields
   if (!formData.value.title || !formData.value.title.trim()) {
-    alert('Judul event harus diisi!');
+    uiStore.showToast('Judul event harus diisi!', 'warning');
     return;
   }
   
   if (!formData.value.date) {
-    alert('Tanggal event harus diisi!');
+    uiStore.showToast('Tanggal event harus diisi!', 'warning');
     return;
   }
   
   if (!authStore.currentUser) {
-    alert('Error: User tidak terautentikasi');
+    uiStore.showToast('Error: User tidak terautentikasi', 'error');
     return;
   }
   
@@ -99,13 +101,13 @@ const handleCreateEvent = async () => {
     if (newEvent) {
       showCreateModal.value = false;
       resetForm();
-      alert(`✓ Event "${newEvent.title}" berhasil dibuat!`);
+      uiStore.showToast(`Event "${newEvent.title}" berhasil dibuat!`, 'success');
     } else {
-      alert('Gagal membuat event. Silakan coba lagi.');
+      uiStore.showToast('Gagal membuat event.', 'error');
     }
   } catch (error) {
     console.error('Error creating event:', error);
-    alert('Gagal membuat event. Silakan coba lagi.');
+    uiStore.showToast('Gagal membuat event.', 'error');
   }
 };
 
@@ -130,13 +132,21 @@ const handleDeactivate = (eventId: string) => {
 const handleGenerateToken = async (eventId: string) => {
   const result = await eventStore.generateEventToken(eventId);
   if (result) {
-    alert(`Token generated: ${result.token}\nValid for 30 seconds`);
+    uiStore.showToast(`Token baru: ${result.token}`, 'success');
   }
 };
 
-const handleDelete = (eventId: string, title: string) => {
-  if (confirm(`Hapus event "${title}"?`)) {
+const handleDelete = async (eventId: string, title: string) => {
+  const confirmed = await uiStore.confirm({
+    message: `Hapus event "${title}"?`,
+    title: 'Hapus Event',
+    confirmText: 'Hapus',
+    variant: 'danger'
+  });
+  
+  if (confirmed) {
     eventStore.deleteEvent(eventId);
+    uiStore.showToast(`Event "${title}" berhasil dihapus`, 'success');
   }
 };
 
@@ -416,18 +426,13 @@ const formatDateTime = (timestamp: number) => {
 <style scoped>
 .attendance-events-page {
   max-width: 1400px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-4); /* Reduced from space-8 */
-  flex-shrink: 0;
+  margin-bottom: var(--space-4);
 }
 
 .page-header h1 {
@@ -435,22 +440,15 @@ const formatDateTime = (timestamp: number) => {
 }
 
 .active-event-card {
-  flex-shrink: 0;
+  margin-bottom: var(--space-6);
 }
 
 .events-list-card {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  margin-bottom: var(--space-6);
 }
 
 .events-list-card .table-container {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
 }
 
 thead {

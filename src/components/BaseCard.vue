@@ -38,10 +38,14 @@ withDefaults(defineProps<Props>(), {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border-light);
   transition: all var(--transition-base);
-  height: 100%;
+  /* Removed height: 100% to allow "hug content" behavior by default */
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Ensure children don't overflow rounded corners */
+}
+
+.card.h-full {
+  height: 100%;
 }
 
 .card:hover {

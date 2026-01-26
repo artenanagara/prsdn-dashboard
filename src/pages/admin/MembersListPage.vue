@@ -2,10 +2,12 @@
 import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import { useMembersStore } from '../../stores/members';
+import { useUIStore } from '../../stores/ui';
 import { Plus, Edit, Trash2, Eye } from 'lucide-vue-next';
 import { supabase } from '../../lib/supabase';
 
 const membersStore = useMembersStore();
+const uiStore = useUIStore();
 
 const searchQuery = ref('');
 const selectedRT = ref('all');
@@ -91,10 +93,19 @@ const handleSubmit = async () => {
 };
 
 const handleDelete = async (id: string, name: string) => {
-  if (confirm(`Hapus anggota ${name}?\nAkun user terkait juga akan dihapus.`)) {
+  const confirmed = await uiStore.confirm({
+    message: `Hapus anggota ${name}? Akun user terkait juga akan dihapus.`,
+    title: 'Hapus Anggota',
+    confirmText: 'Hapus',
+    variant: 'danger'
+  });
+
+  if (confirmed) {
     const success = await membersStore.deleteMember(id);
     if (!success) {
-      alert('Gagal menghapus anggota. Pastikan tidak ada data yang bergantung (misal: absensi).');
+      uiStore.showToast('Gagal menghapus anggota. Pastikan tidak ada data yang bergantung.', 'error');
+    } else {
+      uiStore.showToast(`Anggota ${name} berhasil dihapus`, 'success');
     }
   }
 };

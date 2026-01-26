@@ -14,7 +14,16 @@ import { ref } from 'vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
-const isSidebarOpen = ref(true);
+const isSidebarOpen = ref(window.innerWidth >= 1024);
+
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  // Ensure sidebar starts closed on mobile even if resized before mount
+  if (window.innerWidth < 1024) {
+    isSidebarOpen.value = false;
+  }
+});
 
 const handleLogout = () => {
   authStore.logout();
@@ -179,17 +188,18 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-base);
+  transition: width var(--transition-base), transform var(--transition-base);
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: 100;
+  overflow: hidden; /* Ensure content doesn't bleed out during transition */
 }
 
 .sidebar-collapsed {
   width: 0;
-  overflow: hidden;
+  border-right-width: 0;
 }
 
 .sidebar-header {
@@ -198,15 +208,18 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-width: var(--sidebar-width); /* Prevent title compression */
 }
 
 .sidebar-logo-title {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  overflow: hidden;
 }
 
 .sidebar-logo {
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
   object-fit: cover;
@@ -233,6 +246,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   font-size: var(--text-lg);
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
+  white-space: nowrap;
 }
 
 .sidebar-nav {
@@ -242,12 +256,13 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   flex-direction: column;
   gap: var(--space-2);
   overflow-y: auto;
+  min-width: var(--sidebar-width);
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Added for submenu arrows */
+  justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -261,6 +276,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   background: transparent;
   width: 100%;
   text-align: left;
+  white-space: nowrap;
 }
 
 .nav-item > div {
@@ -281,13 +297,14 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 .nav-child {
-  padding-left: 52px; /* 16px (padding) + 20px (icon) + 12px (gap) + 4px extra indent */
+  padding-left: 52px;
   font-size: 0.9em;
 }
 
 .sidebar-footer {
   padding: var(--space-4);
   border-top: 1px solid var(--color-border-light);
+  min-width: var(--sidebar-width);
 }
 
 .nav-item-logout {
@@ -322,6 +339,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0; /* Important: prevents header from shrinking */
   position: sticky;
   top: 0;
   z-index: 90;
@@ -341,7 +359,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .page-content {
   flex: 1;
-  padding: var(--space-6); /* Reduced from space-8 */
+  padding: var(--space-6);
   overflow-y: auto;
   display: flex;
   flex-direction: column;

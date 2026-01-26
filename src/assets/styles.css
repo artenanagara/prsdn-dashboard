@@ -238,6 +238,10 @@ p {
   padding: var(--space-6);
 }
 
+.card-compact .card-body {
+  padding: var(--space-4);
+}
+
 /* Forms */
 .form-group {
   margin-bottom: var(--space-4);

@@ -147,7 +147,7 @@ const formatDate = (dateString: string) => {
       </div>
 
       <!-- Filters -->
-      <BaseCard class="mb-6">
+      <BaseCard class="mb-4 filters-card">
         <div class="filters">
           <div class="form-group" style="flex: 1; margin: 0;">
             <input
@@ -170,7 +170,7 @@ const formatDate = (dateString: string) => {
       </BaseCard>
 
       <!-- Members Table -->
-      <BaseCard>
+      <BaseCard class="members-card">
         <div class="table-container">
           <table>
             <thead>
@@ -416,13 +416,18 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .members-page {
   max-width: 1400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4); /* Reduced from space-8 */
+  flex-shrink: 0;
 }
 
 .page-header h1 {
@@ -432,6 +437,7 @@ const formatDate = (dateString: string) => {
 .filters {
   display: flex;
   gap: var(--space-4);
+  flex-shrink: 0;
 }
 
 .action-buttons {
@@ -548,5 +554,55 @@ const formatDate = (dateString: string) => {
   border-radius: var(--radius-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
+}
+.members-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: none !important; /* Disable hover lift */
+}
+
+.members-card :deep(.card-body) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* Let table-container handle padding or keep it tight */
+}
+
+.filters-card {
+  height: auto;
+  flex-shrink: 0;
+}
+
+.table-container {
+  flex: 1;
+  overflow: auto;
+  border: none;
+  margin-bottom: 0;
+  border-radius: 0;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch; /* Mobile smoothness */
+}
+
+/* Ensure empty state is centered */
+.text-center {
+  text-align: center;
+}
+
+/* Make table header sticky relative to table-container */
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    margin-bottom: var(--space-4);
+  }
 }
 </style>

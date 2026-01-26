@@ -126,7 +126,7 @@ const formatTime = (timeString?: string) => {
       </div>
 
       <!-- Active Event Card -->
-      <div v-if="activeEvent" class="card mb-6">
+      <div v-if="activeEvent" class="card mb-4 active-event-card">
         <div class="card-body active-event-layout">
           <!-- Left Column: Details -->
           <div class="event-details-col">
@@ -213,11 +213,11 @@ const formatTime = (timeString?: string) => {
       </div>
 
       <!-- Attendance History -->
-      <div class="page-header mt-8 mb-4">
+      <div class="page-header mt-4 mb-4">
         <h2>Riwayat Kehadiran</h2>
       </div>
 
-       <div class="card">
+       <div class="card history-card">
         <div class="table-container">
           <table class="w-full">
             <thead>
@@ -253,12 +253,17 @@ const formatTime = (timeString?: string) => {
 
 <style scoped>
 .checkin-page {
-  max-width: 1000px; /* Increased from 800px to accommodate side-by-side */
+  max-width: 1000px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   margin: 0 auto;
+  min-height: 0;
 }
 
 .page-header {
-  margin-bottom: var(--space-6); /* Reduced from space-8 */
+  margin-bottom: var(--space-4); /* Reduced from space-6 */
+  flex-shrink: 0;
 }
 
 .page-header h1 {
@@ -393,12 +398,40 @@ const formatTime = (timeString?: string) => {
 /* Table Styling handled globally by .table-container */
 
 
+.active-event-card {
+  flex-shrink: 0;
+  height: auto !important;
+}
+
+.history-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
+}
+
 th {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  background-color: var(--color-bg-secondary);
 }
 
 @media (max-width: 768px) {

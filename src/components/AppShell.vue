@@ -169,7 +169,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 <style scoped>
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100dvh;
   background-color: var(--color-bg);
 }
 
@@ -305,6 +305,9 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   transition: margin-left var(--transition-base);
   display: flex;
   flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sidebar-collapsed + .main-content {
@@ -338,7 +341,11 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .page-content {
   flex: 1;
-  padding: var(--space-8);
+  padding: var(--space-6); /* Reduced from space-8 */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 @media (max-width: 768px) {
@@ -356,7 +363,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   }
 
   .page-content {
-    padding: var(--space-4);
+    padding: var(--space-3); /* Reduced padding for mobile */
   }
 }
 </style>

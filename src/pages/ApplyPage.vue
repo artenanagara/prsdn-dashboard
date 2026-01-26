@@ -77,8 +77,28 @@ const handleSubmit = async () => {
     return;
   }
 
+  // Determine education status and level based on job
+  let educationStatus: 'school' | 'not_school' = 'not_school';
+  let educationLevel: 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined = undefined;
+
+  if (step1Data.value.job === 'Pelajar') {
+    educationStatus = 'school';
+    if (step1Data.value.grade.includes('SMP')) {
+      educationLevel = 'SMP';
+    } else if (step1Data.value.grade.includes('SMA')) {
+      educationLevel = 'SMA/SMK';
+    }
+  } else if (step1Data.value.job === 'Mahasiswa') {
+    educationStatus = 'school';
+    educationLevel = 'College';
+  }
+
   const applicationData = {
-    step1Data: step1Data.value,
+    step1Data: {
+      ...step1Data.value,
+      educationStatus,
+      educationLevel
+    },
     username: username.value,
     password: password.value
   };

@@ -234,7 +234,7 @@ const formatCurrency = (amount: number) => {
       </div>
 
       <!-- Year Tabs -->
-      <BaseCard class="mb-6">
+      <BaseCard class="mb-4 year-tabs-card">
         <div class="year-tabs">
           <button
             v-for="year in years"
@@ -247,7 +247,6 @@ const formatCurrency = (amount: number) => {
         </div>
       </BaseCard>
 
-      <!-- Month List -->
       <div v-if="!selectedMonth" class="months-grid">
         <BaseCard
           v-for="monthSummary in monthSummaries"
@@ -257,27 +256,42 @@ const formatCurrency = (amount: number) => {
         >
           <template #header>
             <div class="flex justify-between items-center w-full">
-              <h3>{{ monthSummary.name }}</h3>
-              <span class="badge badge-secondary">{{ monthSummary.monthKey }}</span>
+              <h3 class="font-bold text-lg">{{ monthSummary.name }}</h3>
+              <span class="badge badge-secondary">{{ selectedYear }}</span>
             </div>
           </template>
           
-          <div class="month-stat-container">
-            <div class="month-stat">
-              <span class="month-stat-label">Terbayar</span>
-              <span class="month-stat-value">{{ monthSummary.paidCount }} / {{ monthSummary.total }}</span>
+          <div class="month-card-content">
+            <div class="payment-progress mb-4">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-secondary">Progress Pelunasan</span>
+                <span class="font-semibold">{{ Math.round((monthSummary.paidCount / (monthSummary.total || 1)) * 100) }}%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div 
+                  class="progress-bar-fill" 
+                  :style="{ width: `${(monthSummary.paidCount / (monthSummary.total || 1)) * 100}%` }"
+                ></div>
+              </div>
             </div>
-            <div class="month-stat">
-              <span class="month-stat-label">Total Terkumpul</span>
-              <span class="month-stat-value text-success">{{ formatCurrency(monthSummary.totalCollected) }}</span>
+            
+            <div class="stats-mini-grid">
+              <div class="stat-mini">
+                <span class="label">Terbayar</span>
+                <span class="value">{{ monthSummary.paidCount }} / {{ monthSummary.total }}</span>
+              </div>
+              <div class="stat-mini">
+                <span class="label">Total</span>
+                <span class="value text-success font-bold">{{ formatCurrency(monthSummary.totalCollected) }}</span>
+              </div>
             </div>
           </div>
         </BaseCard>
       </div>
 
       <!-- Month Detail -->
-      <div v-else>
-        <BaseCard class="mb-6">
+      <div v-else class="flex flex-col flex-1 min-h-0">
+        <BaseCard class="mb-4 month-detail-header-card">
           <div class="month-detail-header">
             <div>
               <h2>{{ selectedMonth ? months[selectedMonth - 1]?.name : '' }} {{ selectedYear }}</h2>
@@ -304,7 +318,7 @@ const formatCurrency = (amount: number) => {
           </div>
         </BaseCard>
 
-        <BaseCard>
+        <BaseCard class="month-detail-card">
           <div class="table-container">
             <table>
               <thead>
@@ -359,10 +373,22 @@ const formatCurrency = (amount: number) => {
 <style scoped>
 .kas-page {
   max-width: 1400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.month-detail-card .table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .page-header {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4); /* Reduced from space-8 */
+  flex-shrink: 0;
 }
 
 .page-header h1 {
@@ -373,6 +399,12 @@ const formatCurrency = (amount: number) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-6);
+  flex-shrink: 0;
+}
+
+.year-tabs-card {
+  height: auto !important;
+  flex-shrink: 0;
 }
 
 .year-tabs {
@@ -406,32 +438,59 @@ const formatCurrency = (amount: number) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-6);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-bottom: var(--space-4);
+  -webkit-overflow-scrolling: touch;
 }
 
 .month-card {
   cursor: pointer;
 }
 
-.month-stat-container {
+.month-card-content {
   display: flex;
   flex-direction: column;
+}
+
+.progress-bar-bg {
+  height: 8px;
+  background-color: var(--color-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-info));
+  border-radius: 4px;
+  transition: width 1s ease-out;
+}
+
+.stats-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-light);
 }
 
-.month-stat {
+.stat-mini {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.month-stat-label {
-  font-size: var(--text-sm);
+.stat-mini .label {
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.month-stat-value {
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-semibold);
+.stat-mini .value {
+  font-size: var(--text-sm);
   color: var(--color-text-primary);
 }
 

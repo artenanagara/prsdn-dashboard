@@ -141,14 +141,41 @@ const getStatusText = (status: string) => {
 <style scoped>
 .applications-page {
   max-width: 1400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .page-header {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4);
+  flex-shrink: 0;
 }
 
 .page-header h1 {
   margin-bottom: var(--space-2);
+}
+
+.card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
 }
 
 .action-buttons {

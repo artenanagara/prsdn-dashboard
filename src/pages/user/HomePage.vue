@@ -357,8 +357,7 @@ const handleCheckin = async () => {
   .user-home-page {
     /* Desktop: Full height, internal scrolling */
     /* Subtract topbar, padding, and a small buffer for borders to prevent body scroll */
-    height: calc(100vh - var(--topbar-height, 65px) - var(--space-8, 32px) * 2 - 2px);
-    overflow: hidden;
+    min-height: calc(100vh - var(--topbar-height, 65px) - var(--space-8, 32px) * 2 - 2px);
     display: flex;
     flex-direction: column;
   }

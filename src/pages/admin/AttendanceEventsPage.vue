@@ -186,7 +186,7 @@ const formatDateTime = (timestamp: number) => {
       </div>
 
       <!-- Active Event Section -->
-      <div v-if="activeEvent" class="card mb-6">
+      <div v-if="activeEvent" class="card mb-6 active-event-card">
         <div class="card-body">
           <div class="active-event-header">
             <h3>Event Aktif</h3>
@@ -236,7 +236,7 @@ const formatDateTime = (timestamp: number) => {
       </div>
 
       <!-- Events List -->
-      <div class="card">
+      <div class="card events-list-card">
         <div class="card-header">
           <h3>Semua Event</h3>
         </div>
@@ -416,17 +416,48 @@ const formatDateTime = (timestamp: number) => {
 <style scoped>
 .attendance-events-page {
   max-width: 1400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4); /* Reduced from space-8 */
+  flex-shrink: 0;
 }
 
 .page-header h1 {
   margin-bottom: var(--space-2);
+}
+
+.active-event-card {
+  flex-shrink: 0;
+}
+
+.events-list-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.events-list-card .table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
 }
 
 .active-event-header {

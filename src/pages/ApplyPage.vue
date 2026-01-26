@@ -21,9 +21,7 @@ const step1Data = ref({
   job: '',
   grade: '', // For Pelajar
   university: '', // For Mahasiswa
-  joinedWhatsApp: false,
-  educationStatus: 'not_school' as 'school' | 'not_school',
-  educationLevel: undefined as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined
+  joinedWhatsApp: false
 });
 
 // Step 2 data
@@ -40,8 +38,7 @@ const canProceedStep1 = computed(() => {
     step1Data.value.birthPlace &&
     step1Data.value.birthDate &&
     step1Data.value.phone &&
-    step1Data.value.job &&
-    (step1Data.value.educationStatus === 'not_school' || step1Data.value.educationLevel)
+    step1Data.value.job
   );
   
   // Additional validation for Pelajar and Mahasiswa
@@ -80,12 +77,8 @@ const handleSubmit = async () => {
     return;
   }
 
-  const { educationLevel, ...rest } = step1Data.value;
   const applicationData = {
-    step1Data: {
-      ...rest,
-      ...(step1Data.value.educationStatus === 'school' ? { educationLevel } : {})
-    },
+    step1Data: step1Data.value,
     username: username.value,
     password: password.value
   };
@@ -154,16 +147,6 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Sudah Bergabung di Grup WhatsApp? *</label>
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input v-model="step1Data.joinedWhatsApp" type="checkbox" class="form-checkbox" />
-                <span>Ya, sudah bergabung</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="form-group">
             <label class="form-label">Instagram</label>
             <div class="input-with-prefix">
               <span class="input-prefix">@</span>
@@ -196,12 +179,6 @@ const handleSubmit = async () => {
             <label class="form-label">Kelas Berapa? *</label>
             <select v-model="step1Data.grade" class="form-select" required>
               <option value="" disabled>Pilih kelas</option>
-              <option value="SD Kelas 1">SD Kelas 1</option>
-              <option value="SD Kelas 2">SD Kelas 2</option>
-              <option value="SD Kelas 3">SD Kelas 3</option>
-              <option value="SD Kelas 4">SD Kelas 4</option>
-              <option value="SD Kelas 5">SD Kelas 5</option>
-              <option value="SD Kelas 6">SD Kelas 6</option>
               <option value="SMP Kelas 7">SMP Kelas 7</option>
               <option value="SMP Kelas 8">SMP Kelas 8</option>
               <option value="SMP Kelas 9">SMP Kelas 9</option>
@@ -223,21 +200,13 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Status Pendidikan *</label>
-            <select v-model="step1Data.educationStatus" class="form-select" required>
-              <option value="not_school">Tidak Sekolah</option>
-              <option value="school">Masih Sekolah</option>
-            </select>
-          </div>
-
-          <div v-if="step1Data.educationStatus === 'school'" class="form-group">
-            <label class="form-label">Jenjang Pendidikan *</label>
-            <select v-model="step1Data.educationLevel" class="form-select" required>
-              <option value="SD">SD</option>
-              <option value="SMP">SMP</option>
-              <option value="SMA/SMK">SMA/SMK</option>
-              <option value="College">Perguruan Tinggi</option>
-            </select>
+            <label class="form-label">Sudah Bergabung di Grup WhatsApp?</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input v-model="step1Data.joinedWhatsApp" type="checkbox" class="form-checkbox" />
+                <span>Ya, sudah bergabung</span>
+              </label>
+            </div>
           </div>
         </form>
 

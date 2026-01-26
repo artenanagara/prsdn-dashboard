@@ -12,8 +12,6 @@ export interface Member {
   grade?: string; // For Pelajar
   university?: string; // For Mahasiswa
   joinedWhatsApp?: boolean;
-  educationStatus: 'school' | 'not_school';
-  educationLevel?: 'SD' | 'SMP' | 'SMA/SMK' | 'College';
   createdAt: string;
 }
 

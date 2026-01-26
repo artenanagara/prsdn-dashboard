@@ -26,13 +26,23 @@ export const useMembersStore = defineStore('members', () => {
 
     const totalMembers = computed(() => members.value.length);
 
-    const loadMembers = async () => {
+    const loadMembers = async (includeAdmins: boolean = true) => {
         isLoading.value = true;
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('members')
-                .select('*')
+                .select(`
+                    *,
+                    user_accounts(role)
+                `)
                 .order('created_at', { ascending: false });
+
+            // If includeAdmins is false, filter out admin accounts
+            if (!includeAdmins) {
+                query = query.eq('user_accounts.role', 'user');
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 

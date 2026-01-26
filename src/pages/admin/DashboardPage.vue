@@ -117,7 +117,9 @@ const upcomingEvents = computed(() => {
 
   // Merge and Sort
   return [...storeEvents, ...birthdayEvents, ...holidayEvents].sort((a, b) => {
-    return new Date(a.date).getTime() - new Date(b.date).getTime();
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateA - dateB;
   });
 });
 
@@ -284,7 +286,7 @@ onMounted(async () => {
               <div class="event-content">
                 <div class="event-title">{{ event.title }}</div>
                 <div class="event-date text-xs text-secondary">
-                  {{ formatDate(event.date) }}
+                  {{ event.date ? formatDate(event.date) : '-' }}
                 </div>
               </div>
               <span :class="['badge', getEventColor(event.type)]">

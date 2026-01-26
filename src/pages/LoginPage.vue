@@ -80,12 +80,6 @@ const handleLogin = async () => {
             <router-link to="/apply" class="text-primary font-medium">Daftar di sini</router-link>
           </p>
         </div>
-
-        <div class="login-demo-info">
-          <p class="text-xs text-secondary">Demo Credentials:</p>
-          <p class="text-xs"><strong>Admin:</strong> admin / admin123</p>
-          <p class="text-xs"><strong>User:</strong> ahmadf / password123</p>
-        </div>
       </div>
     </div>
   </div>

@@ -24,8 +24,8 @@ onMounted(() => {
   // Initialize session from localStorage
   authStore.initSession();
   
-  // Load all data
-  membersStore.loadMembers();
+  // Load all data - load all members initially (admins can see all)
+  membersStore.loadMembers(true); // true = include admins
   financeStore.loadTransactions();
   kasStore.loadPayments();
   applicationsStore.loadApplications();

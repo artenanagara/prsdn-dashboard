@@ -2,7 +2,42 @@
 
 Panduan deployment aplikasi PRSDN Dashboard dengan Supabase ke production.
 
-## 📋 Prasyarat
+## � Quick Start: Deploy via GitHub & Vercel (Recommended)
+
+Karena Anda sudah push code ke GitHub, cara termudah adalah menghubungkan repository GitHub Anda langsung ke Vercel.
+
+**Langkah-langkah:**
+
+1.  **Buka Vercel Dashboard:**
+    - Login ke [vercel.com](https://vercel.com).
+    - Klik tombol **"Add New..."** -> **"Project"**.
+
+2.  **Import Git Repository:**
+    - Di bagian "Import Git Repository", cari repository `prsdn-dashboard` (pastikan akun GitHub Anda sudah terhubung).
+    - Klik **"Import"**.
+
+3.  **Configure Project:**
+    - **Framework Preset:** Vercel biasanya otomatis mendeteksi **Vite**. Jika tidak, pilih **Vite**.
+    - **Root Directory:** `./` (biarkan default).
+    - **Environment Variables:**
+      - Buka file `.env` di komputer lokal Anda (JANGAN commit file ini).
+      - Copy value dari `.env` dan masukkan ke Vercel:
+        - `VITE_SUPABASE_URL`: (URL Project Supabase Anda)
+        - `VITE_SUPABASE_ANON_KEY`: (Anon Key Project Supabase Anda)
+
+4.  **Deploy:**
+    - Klik tombol **"Deploy"**.
+    - Tunggu proses build selesai.
+
+5.  **Finish!**
+    - Aplikasi Anda sekarang online!
+    - Vercel akan otomatis redeploy setiap kali Anda push update ke branch `main`.
+
+> **Note:** File `vercel.json` sudah dibuat di repository untuk menangani routing (agar page refresh tidak error 404).
+
+---
+
+## �📋 Prasyarat
 
 - ✅ Supabase project sudah setup (lihat [SUPABASE_SETUP.md](./SUPABASE_SETUP.md))
 - ✅ Database migrations sudah dijalankan

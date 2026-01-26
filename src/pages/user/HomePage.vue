@@ -57,7 +57,7 @@ onMounted(async () => {
   await Promise.all([
     checkinStore.loadCheckins(),
     eventStore.loadEvents(),
-    membersStore.loadMembers(),
+    membersStore.loadMembers(false), // false = exclude admins for user view
     fetchHolidays()
   ]);
 });

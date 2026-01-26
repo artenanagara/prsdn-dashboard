@@ -360,31 +360,29 @@ input[type="time"].form-input {
 .table-container {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
+  /* Allow sticky table header to work with page scroll if possible */
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-light);
   -webkit-overflow-scrolling: touch;
-  /* Smooth scrolling on iOS */
+  margin-bottom: var(--space-4);
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  /* Required for sticky table header borders */
+  border-spacing: 0;
   background-color: var(--color-surface);
-  min-width: 600px;
-  /* Ensure table doesn't get too narrow */
+  min-width: 100%;
 }
-
-@media (max-width: 768px) {
-  table {
-    min-width: 700px;
-    /* More space on mobile to ensure scrolling works well */
-  }
-}
-
 
 thead {
+  position: sticky;
+  top: var(--topbar-height, 64px);
+  /* Stick below the app header */
+  z-index: 10;
   background-color: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
 }
 
 th {
@@ -393,12 +391,28 @@ th {
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
+  white-space: nowrap;
+  /* Force 1 line */
+  border-bottom: 2px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
 }
 
 td {
   padding: var(--space-4);
   font-size: var(--text-sm);
   border-bottom: 1px solid var(--color-border-light);
+  white-space: nowrap;
+  /* Force 1 line */
+  background-color: var(--color-surface);
+}
+
+@media (max-width: 768px) {
+  /* No specific min-width needed as white-space: nowrap will force the width */
+
+  /* Ensure the table doesn't inherit any layout that breaks overflow */
+  .table-container {
+    display: block;
+  }
 }
 
 tbody tr:last-child td {

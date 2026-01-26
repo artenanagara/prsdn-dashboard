@@ -12,6 +12,7 @@ const checkinStore = useCheckinStore(); // Updated
 const eventStore = useAttendanceEventStore();
 
 onMounted(async () => {
+  document.title = 'Riwayat Kehadiran - PRSDN Dashboard';
   await checkinStore.loadCheckins();
   await eventStore.loadEvents(); // Need events to show titles/details
 });

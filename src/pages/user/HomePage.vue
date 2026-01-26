@@ -54,6 +54,8 @@ const FALLBACK_HOLIDAYS = [
 ];
 
 onMounted(async () => {
+  document.title = 'Beranda - PRSDN Dashboard';
+  
   await Promise.all([
     checkinStore.loadCheckins(),
     eventStore.loadEvents(),

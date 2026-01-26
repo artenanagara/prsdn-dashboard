@@ -20,6 +20,7 @@ const successMessage = ref('');
 const errorMessage = ref('');
 
 onMounted(async () => {
+  document.title = 'Absensi - PRSDN Dashboard';
   await Promise.all([
     eventStore.loadEvents(),
     checkinStore.loadCheckins(),

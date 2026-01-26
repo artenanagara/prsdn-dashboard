@@ -12,6 +12,7 @@ const applications = computed(() => applicationsStore.applications);
 
 // Load applications on mount
 onMounted(() => {
+  document.title = 'Permohonan Akun - PRSDN Admin';
   applicationsStore.loadApplications();
   applicationsStore.subscribeToChanges();
 });

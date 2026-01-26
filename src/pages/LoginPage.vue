@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { LogIn } from 'lucide-vue-next';
+
+onMounted(() => {
+  document.title = 'Login - PRSDN Dashboard';
+});
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -33,6 +37,7 @@ const handleLogin = async () => {
     <div class="login-container">
       <div class="login-card card">
         <div class="login-header">
+          <img src="/logo.jpg" alt="PRSDN Logo" class="login-logo" />
           <h1>PRSDN Dashboard</h1>
           <p>Persatuan Remaja Sub Desa Ngaran</p>
         </div>
@@ -107,6 +112,15 @@ const handleLogin = async () => {
 .login-header {
   text-align: center;
   margin-bottom: var(--space-8);
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin: 0 auto var(--space-4);
+  display: block;
+  border-radius: 50%;
 }
 
 .login-header h1 {

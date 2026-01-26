@@ -76,7 +76,10 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
     <!-- Sidebar -->
     <aside :class="['sidebar', { 'sidebar-collapsed': !isSidebarOpen }]">
       <div class="sidebar-header">
-        <h2 class="sidebar-title">PRSDN</h2>
+        <div class="sidebar-logo-title">
+          <img src="/logo.jpg" alt="PRSDN Logo" class="sidebar-logo" />
+          <h2 class="sidebar-title">PRSDN</h2>
+        </div>
         <button @click="toggleSidebar" class="btn-icon-only" title="Close Sidebar">
            <X :size="20" />
         </button>
@@ -195,6 +198,19 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.sidebar-logo-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .btn-icon-only {

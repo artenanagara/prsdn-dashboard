@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2 } from 'lucide-vue-next';
 const financeStore = useFinanceStore();
 
 onMounted(() => {
+  document.title = 'Buku Kas - PRSDN Admin';
   financeStore.loadTransactions();
   financeStore.subscribeToChanges();
 });

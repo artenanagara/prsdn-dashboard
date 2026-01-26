@@ -161,6 +161,7 @@ const togglePaymentStatus = (index: number) => {
 };
 
 onMounted(async () => {
+    document.title = 'Kas Online - PRSDN Admin';
     await Promise.all([
       kasStore.loadPayments(),
       financeStore.loadTransactions()

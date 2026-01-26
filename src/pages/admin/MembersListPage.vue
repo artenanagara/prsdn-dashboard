@@ -68,6 +68,7 @@ const resetForm = () => {
 };
 
 onMounted(() => {
+  document.title = 'Daftar Anggota - PRSDN Admin';
   membersStore.loadMembers();
   membersStore.subscribeToChanges();
 });

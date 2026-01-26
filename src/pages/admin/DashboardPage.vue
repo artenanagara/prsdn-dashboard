@@ -213,6 +213,8 @@ const getEventColor = (type: string) => {
 import { onMounted } from 'vue';
 
 onMounted(async () => {
+  document.title = 'Dashboard - PRSDN Admin';
+  
   // Load Members
   await membersStore.loadMembers();
   membersStore.subscribeToChanges();

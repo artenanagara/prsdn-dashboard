@@ -28,6 +28,7 @@ const formData = ref({
 });
 
 onMounted(async () => {
+  document.title = 'Absensi - PRSDN Admin';
   await eventStore.loadEvents();
   eventStore.subscribeToChanges();
   await checkinStore.loadCheckins();

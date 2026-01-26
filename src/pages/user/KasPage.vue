@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import { useAuthStore } from '../../stores/auth';
 import { useMembersStore } from '../../stores/members';
@@ -32,6 +32,10 @@ const formatCurrency = (amount: number) => {
     minimumFractionDigits: 0
   }).format(amount);
 };
+
+onMounted(() => {
+  document.title = 'Kas Saya - PRSDN Dashboard';
+});
 </script>
 
 <template>

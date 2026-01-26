@@ -358,16 +358,29 @@ input[type="time"].form-input {
 
 /* Tables */
 .table-container {
+  width: 100%;
   overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-light);
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scrolling on iOS */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   background-color: var(--color-surface);
+  min-width: 600px;
+  /* Ensure table doesn't get too narrow */
 }
+
+@media (max-width: 768px) {
+  table {
+    min-width: 700px;
+    /* More space on mobile to ensure scrolling works well */
+  }
+}
+
 
 thead {
   background-color: var(--color-bg-secondary);

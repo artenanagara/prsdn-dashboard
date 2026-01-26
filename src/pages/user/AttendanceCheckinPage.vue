@@ -390,15 +390,8 @@ const formatTime = (timeString?: string) => {
   border: 1px solid var(--color-danger);
 }
 
-/* Table Styling */
-.table-container {
-  overflow-x: auto;
-}
+/* Table Styling handled globally by .table-container */
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
 
 th {
   font-weight: var(--font-weight-semibold);

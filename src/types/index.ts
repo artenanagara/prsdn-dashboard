@@ -9,6 +9,9 @@ export interface Member {
   phone: string;
   instagram: string;
   job: string;
+  grade?: string; // For Pelajar
+  university?: string; // For Mahasiswa
+  joinedWhatsApp?: boolean;
   educationStatus: 'school' | 'not_school';
   educationLevel?: 'SD' | 'SMP' | 'SMA/SMK' | 'College';
   createdAt: string;

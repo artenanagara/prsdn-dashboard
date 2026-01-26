@@ -35,6 +35,9 @@ export const useApplicationsStore = defineStore('applications', () => {
                     phone: record.phone,
                     instagram: record.instagram || '',
                     job: record.job || '',
+                    grade: record.grade || '',
+                    university: record.university || '',
+                    joinedWhatsApp: record.joined_whatsapp || false,
                     educationStatus: record.education_status as 'school' | 'not_school',
                     educationLevel: record.education_level as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined
                 },
@@ -68,6 +71,9 @@ export const useApplicationsStore = defineStore('applications', () => {
                     phone: data.step1Data.phone,
                     instagram: data.step1Data.instagram || null,
                     job: data.step1Data.job || null,
+                    grade: data.step1Data.grade || null,
+                    university: data.step1Data.university || null,
+                    joined_whatsapp: data.step1Data.joinedWhatsApp || false,
                     education_status: data.step1Data.educationStatus,
                     education_level: data.step1Data.educationLevel || null,
                     username: data.username,
@@ -111,6 +117,9 @@ export const useApplicationsStore = defineStore('applications', () => {
                     phone: application.step1Data.phone,
                     instagram: application.step1Data.instagram || null,
                     job: application.step1Data.job || null,
+                    grade: application.step1Data.grade || null,
+                    university: application.step1Data.university || null,
+                    joined_whatsapp: application.step1Data.joinedWhatsApp || false,
                     education_status: application.step1Data.educationStatus,
                     education_level: application.step1Data.educationLevel || null
                 } as any)

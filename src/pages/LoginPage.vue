@@ -34,7 +34,7 @@ const handleLogin = async () => {
       <div class="login-card card">
         <div class="login-header">
           <h1>PRSDN Dashboard</h1>
-          <p>Sistem Manajemen Anggota & Keuangan</p>
+          <p>Persatuan Remaja Sub Desa Ngaran</p>
         </div>
 
         <form @submit.prevent="handleLogin" class="login-form">

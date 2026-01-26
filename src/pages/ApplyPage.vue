@@ -19,6 +19,9 @@ const step1Data = ref({
   phone: '',
   instagram: '',
   job: '',
+  grade: '', // For Pelajar
+  university: '', // For Mahasiswa
+  joinedWhatsApp: false,
   educationStatus: 'not_school' as 'school' | 'not_school',
   educationLevel: undefined as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined
 });
@@ -32,7 +35,7 @@ const confirmPassword = ref('');
 const errors = ref<Record<string, string>>({});
 
 const canProceedStep1 = computed(() => {
-  return (
+  const baseValid = (
     step1Data.value.fullName &&
     step1Data.value.birthPlace &&
     step1Data.value.birthDate &&
@@ -40,6 +43,12 @@ const canProceedStep1 = computed(() => {
     step1Data.value.job &&
     (step1Data.value.educationStatus === 'not_school' || step1Data.value.educationLevel)
   );
+  
+  // Additional validation for Pelajar and Mahasiswa
+  if (step1Data.value.job === 'Pelajar' && !step1Data.value.grade) return false;
+  if (step1Data.value.job === 'Mahasiswa' && !step1Data.value.university) return false;
+  
+  return baseValid;
 });
 
 const canSubmit = computed(() => {
@@ -145,13 +154,72 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group">
+            <label class="form-label">Sudah Bergabung di Grup WhatsApp? *</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input v-model="step1Data.joinedWhatsApp" type="checkbox" class="form-checkbox" />
+                <span>Ya, sudah bergabung</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Instagram</label>
-            <input v-model="step1Data.instagram" type="text" class="form-input" placeholder="@username" />
+            <div class="input-with-prefix">
+              <span class="input-prefix">@</span>
+              <input 
+                v-model="step1Data.instagram" 
+                type="text" 
+                class="form-input with-prefix" 
+                placeholder="username" 
+              />
+            </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">Pekerjaan *</label>
-            <input v-model="step1Data.job" type="text" class="form-input" required />
+            <select v-model="step1Data.job" class="form-select" required>
+              <option value="" disabled>Pilih pekerjaan</option>
+              <option value="Pelajar">Pelajar</option>
+              <option value="Mahasiswa">Mahasiswa</option>
+              <option value="Karyawan Swasta">Karyawan Swasta</option>
+              <option value="PNS/ASN">PNS/ASN</option>
+              <option value="Wiraswasta">Wiraswasta</option>
+              <option value="Freelancer">Freelancer</option>
+              <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
+              <option value="Belum Bekerja">Belum Bekerja</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+
+          <div v-if="step1Data.job === 'Pelajar'" class="form-group">
+            <label class="form-label">Kelas Berapa? *</label>
+            <select v-model="step1Data.grade" class="form-select" required>
+              <option value="" disabled>Pilih kelas</option>
+              <option value="SD Kelas 1">SD Kelas 1</option>
+              <option value="SD Kelas 2">SD Kelas 2</option>
+              <option value="SD Kelas 3">SD Kelas 3</option>
+              <option value="SD Kelas 4">SD Kelas 4</option>
+              <option value="SD Kelas 5">SD Kelas 5</option>
+              <option value="SD Kelas 6">SD Kelas 6</option>
+              <option value="SMP Kelas 7">SMP Kelas 7</option>
+              <option value="SMP Kelas 8">SMP Kelas 8</option>
+              <option value="SMP Kelas 9">SMP Kelas 9</option>
+              <option value="SMA/SMK Kelas 10">SMA/SMK Kelas 10</option>
+              <option value="SMA/SMK Kelas 11">SMA/SMK Kelas 11</option>
+              <option value="SMA/SMK Kelas 12">SMA/SMK Kelas 12</option>
+            </select>
+          </div>
+
+          <div v-if="step1Data.job === 'Mahasiswa'" class="form-group">
+            <label class="form-label">Universitas *</label>
+            <input 
+              v-model="step1Data.university" 
+              type="text" 
+              class="form-input" 
+              placeholder="Nama universitas" 
+              required 
+            />
           </div>
 
           <div class="form-group">
@@ -325,5 +393,50 @@ const handleSubmit = async () => {
   padding-top: var(--space-6);
   border-top: 1px solid var(--color-border-light);
   text-align: center;
+}
+
+/* Input with prefix styling */
+.input-with-prefix {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.form-input.with-prefix {
+  padding-left: calc(var(--space-3) + 1.2em);
+}
+
+/* Checkbox styling */
+.checkbox-group {
+  padding: var(--space-2) 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+}
+
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.checkbox-label:hover {
+  color: var(--color-primary);
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
 import { useFinanceStore } from '../../stores/finance';
@@ -65,6 +65,29 @@ const resetForm = () => {
     note: ''
   };
 };
+
+const displayAmount = ref('');
+
+const formatDisplayAmount = (val: number | string) => {
+  if (!val && val !== 0) return '';
+  return new Intl.NumberFormat('id-ID').format(Number(val));
+};
+
+const handleAmountInput = (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const rawValue = input.value.replace(/[^0-9]/g, '');
+  const numericValue = parseInt(rawValue) || 0;
+  
+  formData.value.amount = numericValue;
+  displayAmount.value = formatDisplayAmount(numericValue);
+};
+
+// Update display when opening modal
+watch(showModal, (val) => {
+  if (val) {
+    displayAmount.value = formatDisplayAmount(formData.value.amount);
+  }
+});
 
 const handleSubmit = async () => {
   let success = false;
@@ -265,7 +288,17 @@ const formatDate = (dateString: string) => {
 
             <div class="form-group">
               <label class="form-label">Jumlah *</label>
-              <input v-model.number="formData.amount" type="number" class="form-input" min="0" required />
+              <div class="input-with-prefix">
+                <span class="input-prefix">Rp</span>
+                <input 
+                  :value="displayAmount" 
+                  @input="handleAmountInput"
+                  type="text" 
+                  class="form-input" 
+                  placeholder="0"
+                  required 
+                />
+              </div>
             </div>
 
             <div class="form-group">
@@ -360,7 +393,7 @@ const formatDate = (dateString: string) => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: center; /* Center vertically */
   justify-content: center;
   z-index: 1000;
   padding: var(--space-6);
@@ -370,25 +403,31 @@ const formatDate = (dateString: string) => {
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; 
 }
 
 .modal-header {
   padding: var(--space-6);
   border-bottom: 1px solid var(--color-border-light);
+  flex-shrink: 0;
 }
 
 .modal-body {
   padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-actions {
   display: flex;
   gap: var(--space-4);
   justify-content: flex-end;
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
+  margin-top: 0; /* Reset since it's now in a flex-container or following body */
+  padding: var(--space-6);
   border-top: 1px solid var(--color-border-light);
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

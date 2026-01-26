@@ -166,9 +166,11 @@ onMounted(async () => {
     document.title = 'Kas Online - PRSDN Admin';
     await Promise.all([
       kasStore.loadPayments(),
+      membersStore.loadMembers(),
       financeStore.loadTransactions()
     ]);
     kasStore.subscribeToChanges();
+    membersStore.subscribeToChanges();
     financeStore.subscribeToChanges();
 });
 
@@ -193,6 +195,23 @@ const saveMonthPayments = async () => {
   } catch (error) {
     console.error(error);
     uiStore.showToast('Gagal menyimpan data kas. Silakan cek koneksi.', 'error');
+  }
+};
+
+const formatCurrencyInput = (val: number | string) => {
+  if (!val && val !== 0) return '';
+  return new Intl.NumberFormat('id-ID').format(Number(val));
+};
+
+const handleTableAmountInput = (index: number, e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const rawValue = input.value.replace(/[^0-9]/g, '');
+  const numericValue = parseInt(rawValue) || 0;
+  
+  const item = filteredMonthData.value[index];
+  if (item) {
+    item.amount = numericValue;
+    input.value = formatCurrencyInput(numericValue);
   }
 };
 
@@ -319,12 +338,12 @@ const formatCurrency = (amount: number) => {
           </div>
         </BaseCard>
 
-        <BaseCard class="month-detail-card">
+        <BaseCard class="month-detail-card" no-padding>
           <div class="table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Nama</th>
+                  <th>Nama *</th>
                   <th>RT</th>
                   <th>Jumlah</th>
                   <th>Status</th>
@@ -333,17 +352,33 @@ const formatCurrency = (amount: number) => {
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="membersStore.isLoading">
+                  <td colspan="6" class="text-center py-8">
+                    <div class="flex items-center justify-center gap-2 text-secondary">
+                      <span class="loading-spinner"></span>
+                      <span>Memuat data anggota...</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-else-if="filteredMonthData.length === 0">
+                  <td colspan="6" class="text-center text-secondary py-8">
+                    Tidak ada data anggota untuk filter ini
+                  </td>
+                </tr>
                 <tr v-for="(item, index) in filteredMonthData" :key="item.memberId">
                   <td class="font-medium">{{ item.memberName }}</td>
                   <td><span class="badge badge-secondary">RT {{ item.rt }}</span></td>
                   <td>
-                    <input
-                      v-model.number="item.amount"
-                      type="number"
-                      class="form-input"
-                      style="max-width: 120px;"
-                      min="0"
-                    />
+                    <div class="input-with-prefix">
+                      <span class="input-prefix" style="left: 0.5rem; font-size: 0.75rem;">Rp</span>
+                      <input
+                        :value="formatCurrencyInput(item.amount)"
+                        @input="handleTableAmountInput(index, $event)"
+                        type="text"
+                        class="form-input text-sm"
+                        style="max-width: 120px; padding-left: 2rem;"
+                      />
+                    </div>
                   </td>
                   <td>
                     <span :class="['badge', item.status === 'paid' ? 'badge-success' : 'badge-warning']">
@@ -372,8 +407,18 @@ const formatCurrency = (amount: number) => {
 </template>
 
 <style scoped>
-.kas-page {
-  max-width: 1400px;
+.month-detail-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.month-detail-card :deep(.card-body) {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .month-detail-card .table-container {
@@ -384,7 +429,7 @@ const formatCurrency = (amount: number) => {
 }
 
 .page-header {
-  margin-bottom: var(--space-4); /* Reduced from space-8 */
+  margin-bottom: var(--space-4);
   flex-shrink: 0;
 }
 
@@ -485,6 +530,10 @@ const formatCurrency = (amount: number) => {
 .stat-mini .value {
   font-size: var(--text-sm);
   color: var(--color-text-primary);
+}
+
+.month-detail-header-card {
+  flex-shrink: 0; /* Prevent header stretching */
 }
 
 .month-detail-header {

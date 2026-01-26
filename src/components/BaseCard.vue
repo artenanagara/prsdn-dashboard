@@ -2,12 +2,14 @@
 interface Props {
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   noPadding?: boolean;
+  scrollableBody?: boolean;
   title?: string;
 }
 
 withDefaults(defineProps<Props>(), {
   variant: 'default',
   noPadding: false,
+  scrollableBody: false,
   title: undefined
 });
 </script>
@@ -19,7 +21,7 @@ withDefaults(defineProps<Props>(), {
       <slot name="header"></slot>
     </div>
     
-    <div :class="['card-body', { 'p-0': noPadding }]">
+    <div :class="['card-body', { 'p-0': noPadding, 'scrollable': scrollableBody }]">
       <slot></slot>
     </div>
     
@@ -56,6 +58,12 @@ withDefaults(defineProps<Props>(), {
 .card-body {
   padding: var(--space-6);
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body.scrollable {
+  overflow-y: auto; /* Opt-in internal scrolling */
 }
 
 .card-body.p-0 {

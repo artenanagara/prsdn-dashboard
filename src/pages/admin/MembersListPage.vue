@@ -234,7 +234,7 @@ const formatDate = (dateString: string) => {
 
       <!-- Add/Edit Modal -->
       <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <BaseCard class="modal-content" no-padding>
+        <BaseCard class="modal-content" no-padding scrollable-body>
           <template #header>
             <h2>{{ editingMember ? 'Edit Anggota' : 'Tambah Anggota' }}</h2>
           </template>
@@ -318,7 +318,7 @@ const formatDate = (dateString: string) => {
 
       <!-- View Member Modal -->
       <div v-if="showViewModal" class="modal-overlay" @click.self="showViewModal = false">
-        <BaseCard class="modal-content" no-padding>
+        <BaseCard class="modal-content" no-padding scrollable-body>
           <template #header>
             <h2>Detail Anggota</h2>
           </template>
@@ -470,7 +470,7 @@ const formatDate = (dateString: string) => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: center; /* Center vertically */
   justify-content: center;
   z-index: 1000;
   padding: var(--space-6);
@@ -480,15 +480,10 @@ const formatDate = (dateString: string) => {
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  overflow: visible; /* Prevent clipping of teleported dropdowns */
 }
 
-.modal-body-content {
-  padding: var(--space-6);
-  overflow-y: auto;
-  flex: 1;
-}
+
 
 .modal-actions {
   display: flex;

@@ -8,6 +8,7 @@ import { useMembersStore } from '../../stores/members';
 import { useAuthStore } from '../../stores/auth';
 import { useUIStore } from '../../stores/ui';
 import { Plus, Play, Square, RefreshCw, Trash2, Users } from 'lucide-vue-next';
+import TimePicker from '../../components/TimePicker.vue';
 
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
@@ -336,11 +337,11 @@ const formatDateTime = (timestamp: number) => {
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Waktu Mulai</label>
-                <input v-model="formData.startTime" type="time" class="form-input" />
+                <TimePicker v-model="formData.startTime" placeholder="Mulai" />
               </div>
               <div class="form-group">
                 <label class="form-label">Waktu Selesai</label>
-                <input v-model="formData.endTime" type="time" class="form-input" />
+                <TimePicker v-model="formData.endTime" placeholder="Selesai" />
               </div>
             </div>
 
@@ -555,7 +556,7 @@ thead {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: center; /* Center vertically */
   justify-content: center;
   z-index: 1000;
   padding: var(--space-6);
@@ -565,20 +566,21 @@ thead {
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-large {
-  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; 
 }
 
 .modal-header {
   padding: var(--space-6);
   border-bottom: 1px solid var(--color-border-light);
+  flex-shrink: 0;
 }
 
 .modal-body {
   padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
@@ -586,6 +588,7 @@ thead {
   border-top: 1px solid var(--color-border-light);
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .modal-actions {

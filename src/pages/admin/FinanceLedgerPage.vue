@@ -206,7 +206,8 @@ const formatDate = (dateString: string) => {
       </div>
 
       <!-- Transactions Table -->
-      <div class="card">
+      <BaseCard class="table-card">
+        <div class="table-scroll-container">
         <table>
             <thead>
               <tr>
@@ -263,7 +264,8 @@ const formatDate = (dateString: string) => {
               </tr>
             </tbody>
           </table>
-      </div>
+        </div>
+      </BaseCard>
 
       <!-- Add/Edit Modal -->
       <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
@@ -349,6 +351,28 @@ const formatDate = (dateString: string) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-6);
+}
+
+.table-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-card :deep(.card-body) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-tabs {

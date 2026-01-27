@@ -84,14 +84,17 @@ const getStatusText = (status: string) => {
 <template>
   <AppShell>
     <div class="applications-page">
-      <div class="page-header">
-        <div>
-          <h1>Permohonan Akun</h1>
-          <p class="text-secondary">Kelola permohonan pendaftaran anggota baru</p>
+      <BaseCard class="page-header-card">
+        <div class="page-header">
+          <div>
+            <h1>Permohonan Akun</h1>
+            <p class="text-secondary">Kelola permohonan pendaftaran anggota baru</p>
+          </div>
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="card">
+      <BaseCard class="table-card">
+        <div class="table-scroll-container">
         <table>
             <thead>
               <tr>
@@ -158,7 +161,8 @@ const getStatusText = (status: string) => {
               </tr>
             </tbody>
           </table>
-      </div>
+        </div>
+      </BaseCard>
     </div>
   </AppShell>
 </template>
@@ -172,16 +176,16 @@ const getStatusText = (status: string) => {
   min-height: 0;
 }
 
-.page-header {
-  margin-bottom: var(--space-4);
+.page-header-card {
   flex-shrink: 0;
+  margin-bottom: var(--space-4);
 }
 
-.page-header h1 {
-  margin-bottom: var(--space-2);
+.page-header {
+  margin-bottom: 0;
 }
 
-.card {
+.table-card {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -189,10 +193,17 @@ const getStatusText = (status: string) => {
   overflow: hidden;
 }
 
-.table-container {
+.table-card :deep(.card-body) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.table-scroll-container {
   flex: 1;
   overflow: auto;
-  min-height: 0;
   -webkit-overflow-scrolling: touch;
 }
 

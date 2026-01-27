@@ -410,9 +410,19 @@ table {
 
 thead {
   position: sticky;
-  top: var(--topbar-height, 64px);
-  /* Stick below the app header */
+  top: 0;
   z-index: 10;
+  background-color: var(--color-bg-secondary);
+}
+
+/* Sticky header within scroll container */
+.table-scroll-container thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-scroll-container thead tr {
   background-color: var(--color-bg-secondary);
 }
 
@@ -423,9 +433,10 @@ th {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   white-space: nowrap;
-  /* Force 1 line */
   border-bottom: 2px solid var(--color-border);
   background-color: var(--color-bg-secondary);
+  position: sticky;
+  top: 0;
 }
 
 td {

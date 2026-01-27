@@ -634,3 +634,174 @@ tbody tr:hover {
 .color-bg-elevated {
   background-color: var(--color-surface);
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+
+  /* Adjust spacing for mobile */
+  :root {
+    --space-4: 0.875rem;
+    /* 14px instead of 16px */
+    --space-6: 1.25rem;
+    /* 20px instead of 24px */
+    --space-8: 1.75rem;
+    /* 28px instead of 32px */
+  }
+
+  /* Typography scaling for mobile */
+  h1 {
+    font-size: var(--text-xl);
+    /* Reduced from 2xl */
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+    /* Reduced from xl */
+  }
+
+  h3 {
+    font-size: var(--text-base);
+    /* Reduced from lg */
+  }
+
+  /* Button adjustments */
+  .btn {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    min-height: 36px;
+  }
+
+  .btn-lg {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  /* Card adjustments */
+  .card-body {
+    padding: var(--space-4);
+  }
+
+  /* Form adjustments */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: var(--text-base);
+    /* Prevent zoom on focus in iOS */
+    min-height: 44px;
+    /* iOS touch target */
+  }
+
+  /* Table improvements for mobile */
+  .table-scroll-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(var(--space-4) * -1);
+    /* Bleed to edges */
+    padding: 0 var(--space-4);
+  }
+
+  table {
+    font-size: var(--text-xs);
+  }
+
+  th,
+  td {
+    padding: var(--space-3) var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  th {
+    white-space: nowrap;
+  }
+
+  /* Better touch targets */
+  .nav-item {
+    min-height: 44px;
+    padding: var(--space-3);
+  }
+
+  /* Reduce gaps */
+  .gap-6 {
+    gap: var(--space-4);
+  }
+
+  .gap-4 {
+    gap: var(--space-3);
+  }
+
+  /* Adjust topbar for mobile */
+  .topbar {
+    padding: 0 var(--space-4);
+  }
+
+  .topbar-username {
+    display: none;
+    /* Hide username on small screens */
+  }
+
+  /* Badge adjustments */
+  .badge {
+    font-size: 0.625rem;
+    /* 10px */
+    padding: var(--space-1) var(--space-2);
+  }
+
+  /* Utility adjustments */
+  .p-6 {
+    padding: var(--space-4);
+  }
+
+  .mb-6,
+  .mt-6 {
+    margin-bottom: var(--space-4);
+    margin-top: var(--space-4);
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+
+  /* Further reduce spacing */
+  .page-content {
+    padding: var(--space-3);
+  }
+
+  /* Stack flex items on very small screens */
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  /* Full width buttons on small screens */
+  .btn:not(.btn-sm):not(.btn-icon-only) {
+    width: 100%;
+  }
+
+  /* Compact form groups */
+  .form-group {
+    margin-bottom: var(--space-3);
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .page-content {
+    padding: var(--space-3);
+  }
+
+  /* Reduce topbar height in landscape */
+  .topbar {
+    height: 56px;
+  }
+}
+
+/* Prevent text selection on touch UI elements */
+@media (hover: none) and (pointer: coarse) {
+
+  .btn,
+  .nav-item,
+  .badge {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

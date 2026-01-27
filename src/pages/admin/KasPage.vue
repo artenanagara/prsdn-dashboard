@@ -333,21 +333,22 @@ const formatCurrency = (amount: number) => {
                 {{ currentMonthSummary.paidCount }} dari {{ currentMonthSummary.total }} anggota sudah membayar
               </p>
             </div>
-            <div class="table-header-actions">
+            <div class="table-header-filters">
               <input
                 v-model="searchQuery"
                 type="text"
                 class="form-input"
                 placeholder="Cari nama..."
-                style="max-width: 100%;"
               >
-              <select v-model="filterRT" class="form-select" style="max-width: 200px;">
+              <select v-model="filterRT" class="form-select">
                 <option value="all">Semua RT</option>
                 <option value="01">RT 01</option>
                 <option value="02">RT 02</option>
                 <option value="03">RT 03</option>
                 <option value="04">RT 04</option>
               </select>
+            </div>
+            <div class="table-header-actions">
               <button @click="selectedMonth = null" class="btn btn-secondary">
                 Kembali
               </button>
@@ -396,13 +397,12 @@ const formatCurrency = (amount: number) => {
                     <td><span class="badge badge-secondary">RT {{ item.rt }}</span></td>
                     <td>
                       <div class="input-with-prefix">
-                        <span class="input-prefix" style="left: 0.5rem; font-size: 0.75rem;">Rp</span>
+                        <span class="input-prefix kas-input-prefix">Rp</span>
                         <input
                           :value="formatCurrencyInput(item.amount)"
                           @input="handleTableAmountInput(index, $event)"
                           type="text"
-                          class="form-input text-sm"
-                          style="max-width: 120px; padding-left: 2rem;"
+                          class="form-input kas-amount-input"
                         />
                       </div>
                     </td>
@@ -434,9 +434,16 @@ const formatCurrency = (amount: number) => {
 </template>
 
 <style scoped>
+.kas-page {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 .month-detail-card {
   flex-shrink: 0;
   margin-bottom: var(--space-4);
+  max-width: 100%;
+  overflow-x: visible;
 }
 
 .month-detail-card :deep(.card-body) {
@@ -449,6 +456,7 @@ const formatCurrency = (amount: number) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .table-card :deep(.card-body) {
@@ -461,7 +469,8 @@ const formatCurrency = (amount: number) => {
 
 .table-scroll-container {
   flex: 1;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -479,11 +488,15 @@ const formatCurrency = (amount: number) => {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-6);
   flex-shrink: 0;
+  max-width: 100%;
+  overflow-x: visible;
 }
 
 .year-tabs-card {
   height: auto !important;
   flex-shrink: 0;
+  max-width: 100%;
+  overflow-x: visible;
 }
 
 .year-tabs {
@@ -518,6 +531,8 @@ const formatCurrency = (amount: number) => {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-6);
   padding-bottom: var(--space-4);
+  max-width: 100%;
+  overflow-x: visible;
 }
 
 .month-card {
@@ -565,6 +580,8 @@ const formatCurrency = (amount: number) => {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
+  max-width: 100%;
+  overflow-x: visible;
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-bg-elevated);
@@ -588,22 +605,49 @@ const formatCurrency = (amount: number) => {
   font-size: var(--text-sm);
 }
 
+.table-header-filters {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.table-header-filters .form-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.table-header-filters .form-select {
+  width: auto;
+  min-width: 150px;
+}
+
 .table-header-actions {
   display: flex;
   gap: var(--space-3);
   align-items: center;
-  flex-direction: row;
+  flex-wrap: wrap;
   margin: 0;
 }
 
 @media (max-width: 768px) {
+  .table-header-filters {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  
+  .table-header-filters .form-input,
+  .table-header-filters .form-select {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+  
   .table-header-actions {
     flex-direction: column;
     align-items: stretch;
   }
   
-  .table-header-actions .form-input,
-  .table-header-actions .form-select,
   .table-header-actions .btn {
     width: 100%;
   }
@@ -629,7 +673,8 @@ const formatCurrency = (amount: number) => {
 /* Force proper table layout */
 table {
   table-layout: auto;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   margin: 0;
   border-spacing: 0;
 }
@@ -637,10 +682,30 @@ table {
 thead {
   margin: 0;
   padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
 }
 
 tbody {
   display: table-row-group !important;
+}
+
+/* Kas amount input styling */
+.kas-amount-input {
+  min-width: 140px;
+  width: 160px;
+  padding-left: 2.5rem !important;
+  font-size: var(--text-base) !important;
+  font-weight: var(--font-weight-medium);
+  height: 42px;
+}
+
+.kas-input-prefix {
+  left: 0.75rem !important;
+  font-size: var(--text-sm) !important;
+  font-weight: var(--font-weight-medium);
 }
 
 @media (max-width: 768px) {

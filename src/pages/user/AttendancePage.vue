@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'; // Added onMounted
+import { computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
+import BaseCard from '../../components/BaseCard.vue';
+import EmptyState from '../../components/EmptyState.vue';
 import { useAuthStore } from '../../stores/auth';
 import { useMembersStore } from '../../stores/members';
-import { useCheckinStore } from '../../stores/checkin'; // Updated
-import { useAttendanceEventStore } from '../../stores/attendanceEvent'; // To get Event Title if needed
+import { useCheckinStore } from '../../stores/checkin';
+import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 
 const authStore = useAuthStore();
 const membersStore = useMembersStore();
-const checkinStore = useCheckinStore(); // Updated
+const checkinStore = useCheckinStore();
 const eventStore = useAttendanceEventStore();
 
 onMounted(async () => {
   document.title = 'Riwayat Kehadiran - PRSDN Dashboard';
   await checkinStore.loadCheckins();
-  await eventStore.loadEvents(); // Need events to show titles/details
+  await eventStore.loadEvents();
 });
 
 const member = computed(() => {
@@ -52,24 +54,24 @@ const formatDate = (timestamp: number) => {
 <template>
   <AppShell>
     <div class="user-attendance-page">
-      <div class="page-header">
-        <h1>Riwayat Kehadiran</h1>
-        <p class="text-secondary">Lihat riwayat kehadiran Anda di pertemuan bulanan</p>
-      </div>
+      <BaseCard class="page-header-card">
+        <div class="page-header">
+          <h1>Riwayat Kehadiran</h1>
+          <p class="text-secondary">Lihat riwayat kehadiran Anda di pertemuan bulanan</p>
+        </div>
+      </BaseCard>
 
-      <div class="card mb-6">
-        <div class="card-body">
-          <div class="summary">
-            <div class="summary-item">
-              <span class="summary-label">Total Kehadiran</span>
-              <span class="summary-value text-success">{{ attendanceHistory.length }} kali</span>
-            </div>
+      <BaseCard class="mb-6 summary-card">
+        <div class="summary">
+          <div class="summary-item">
+            <span class="summary-label">Total Kehadiran</span>
+            <span class="summary-value text-success">{{ attendanceHistory.length }} kali</span>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="card">
-        <div class="table-container">
+      <BaseCard class="table-card">
+        <div class="table-scroll-container">
           <table>
             <thead>
               <tr>
@@ -81,8 +83,12 @@ const formatDate = (timestamp: number) => {
             </thead>
             <tbody>
               <tr v-if="attendanceHistory.length === 0">
-                <td colspan="4" class="text-center text-secondary">
-                  Belum ada riwayat kehadiran
+                <td colspan="4" class="empty-cell">
+                  <EmptyState
+                    icon="calendar"
+                    title="Belum ada kehadiran"
+                    message="Belum ada riwayat kehadiran yang tercatat."
+                  />
                 </td>
               </tr>
               <tr v-for="record in attendanceHistory" :key="record.id">
@@ -96,7 +102,7 @@ const formatDate = (timestamp: number) => {
             </tbody>
           </table>
         </div>
-      </div>
+      </BaseCard>
     </div>
   </AppShell>
 </template>
@@ -104,10 +110,15 @@ const formatDate = (timestamp: number) => {
 <style scoped>
 .user-attendance-page {
   max-width: 1200px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.page-header {
-  margin-bottom: var(--space-8);
+.page-header-card, .summary-card {
+  flex-shrink: 0;
+  margin-bottom: var(--space-4);
 }
 
 .page-header h1 {
@@ -133,8 +144,37 @@ const formatDate = (timestamp: number) => {
 }
 
 .summary-value {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
+}
+
+.table-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-card :deep(.card-body) {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-secondary);
 }
 </style>

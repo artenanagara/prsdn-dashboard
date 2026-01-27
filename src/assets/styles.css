@@ -410,6 +410,7 @@ table {
 
 thead {
   position: sticky;
+  min-height: 42px;
   top: 0;
   z-index: 10;
   background-color: var(--color-bg-secondary);

@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
+import BaseCard from '../../components/BaseCard.vue';
+import EmptyState from '../../components/EmptyState.vue';
 import CountdownTimer from '../../components/CountdownTimer.vue';
 import TokenInput from '../../components/TokenInput.vue';
 import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useAuthStore } from '../../stores/auth';
-import { useMembersStore } from '../../stores/members'; // Added
+import { useMembersStore } from '../../stores/members';
 import { CheckCircle } from 'lucide-vue-next';
 
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
 const authStore = useAuthStore();
-const membersStore = useMembersStore(); // Added
+const membersStore = useMembersStore();
 
 const tokenValue = ref('');
 const isSubmitting = ref(false);
@@ -24,7 +26,7 @@ onMounted(async () => {
   await Promise.all([
     eventStore.loadEvents(),
     checkinStore.loadCheckins(),
-    membersStore.loadMembers() // Added
+    membersStore.loadMembers()
   ]);
 });
 
@@ -120,14 +122,16 @@ const formatTime = (timeString?: string) => {
 <template>
   <AppShell>
     <div class="checkin-page">
-      <div class="page-header">
-        <h1>Absensi</h1>
-        <p class="text-secondary">Check-in event dan riwayat kehadiran</p>
-      </div>
+      <BaseCard class="page-header-card">
+        <div class="page-header">
+          <h1>Absensi</h1>
+          <p class="text-secondary">Check-in event dan riwayat kehadiran</p>
+        </div>
+      </BaseCard>
 
       <!-- Active Event Card -->
-      <div v-if="activeEvent" class="card mb-4 active-event-card">
-        <div class="card-body active-event-layout">
+      <BaseCard v-if="activeEvent" class="mb-4 active-event-card">
+        <div class="active-event-layout">
           <!-- Left Column: Details -->
           <div class="event-details-col">
             <div class="event-header">
@@ -201,24 +205,20 @@ const formatTime = (timeString?: string) => {
             </div>
           </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- No Active Event -->
-      <div v-else class="card mb-6">
-        <div class="card-body text-center empty-state py-12">
-          <div class="text-6xl mb-4">📅</div>
-          <h3>Tidak Ada Event Aktif</h3>
-          <p class="text-secondary">Saat ini tidak ada event yang sedang berlangsung.</p>
-        </div>
-      </div>
+      <BaseCard v-else class="mb-4">
+        <EmptyState
+            icon="calendar"
+            title="Tidak Ada Event Aktif"
+            message="Saat ini tidak ada event yang sedang berlangsung untuk check-in."
+        />
+      </BaseCard>
 
       <!-- Attendance History -->
-      <div class="page-header mt-4 mb-4">
-        <h2>Riwayat Kehadiran</h2>
-      </div>
-
-       <div class="card history-card">
-        <div class="table-container">
+      <BaseCard class="history-card" title="Riwayat Kehadiran">
+        <div class="table-scroll-container">
           <table class="w-full">
             <thead>
               <tr class="text-left border-b border-border">
@@ -230,8 +230,12 @@ const formatTime = (timeString?: string) => {
             </thead>
             <tbody>
               <tr v-if="attendanceHistory.length === 0">
-                <td colspan="4" class="p-8 text-center text-secondary">
-                  Belum ada riwayat kehadiran
+                <td colspan="4" class="empty-cell">
+                   <EmptyState
+                    icon="calendar"
+                    title="Belum ada riwayat"
+                    message="Belum ada riwayat kehadiran yang tercatat."
+                  />
                 </td>
               </tr>
               <tr v-for="record in attendanceHistory" :key="record.id" class="border-b border-border-light last:border-0 hover:bg-bg-subtle transition-colors">
@@ -245,7 +249,7 @@ const formatTime = (timeString?: string) => {
             </tbody>
           </table>
         </div>
-      </div>
+      </BaseCard>
 
     </div>
   </AppShell>
@@ -261,9 +265,13 @@ const formatTime = (timeString?: string) => {
   min-height: 0;
 }
 
-.page-header {
-  margin-bottom: var(--space-4); /* Reduced from space-6 */
+.page-header-card {
   flex-shrink: 0;
+  margin-bottom: var(--space-4);
+}
+
+.page-header {
+  margin-bottom: 0;
 }
 
 .page-header h1 {
@@ -395,9 +403,6 @@ const formatTime = (timeString?: string) => {
   border: 1px solid var(--color-danger);
 }
 
-/* Table Styling handled globally by .table-container */
-
-
 .active-event-card {
   flex-shrink: 0;
   height: auto !important;
@@ -411,7 +416,15 @@ const formatTime = (timeString?: string) => {
   overflow: hidden;
 }
 
-.table-container {
+.history-card :deep(.card-body) {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.table-scroll-container {
   flex: 1;
   overflow: auto;
   min-height: 0;

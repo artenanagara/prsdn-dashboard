@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import { useMembersStore } from '../../stores/members';
 import { useUIStore } from '../../stores/ui';
-import { Plus, Edit, Trash2, Eye } from 'lucide-vue-next';
+import { Edit, Trash2, Eye } from 'lucide-vue-next';
 import { supabase } from '../../lib/supabase';
 
 const membersStore = useMembersStore();
@@ -42,12 +42,6 @@ const filteredMembers = computed(() => {
 
   return result;
 });
-
-const openAddModal = () => {
-  editingMember.value = null;
-  resetForm();
-  showModal.value = true;
-};
 
 const openEditModal = (member: any) => {
   editingMember.value = member;
@@ -153,10 +147,6 @@ const formatDate = (dateString: string) => {
             <h1>Manajemen Anggota</h1>
             <p class="text-secondary">Kelola data anggota</p>
           </div>
-          <button @click="openAddModal" class="btn btn-primary">
-            <Plus :size="20" />
-            <span>Tambah Anggota</span>
-          </button>
         </div>
       </BaseCard>
 
@@ -212,9 +202,7 @@ const formatDate = (dateString: string) => {
                   <EmptyState
                     :icon="searchQuery || selectedRT !== 'all' ? 'search' : 'users'"
                     title="Tidak ada data"
-                    :message="searchQuery || selectedRT !== 'all' ? 'Tidak ada anggota yang sesuai dengan filter yang dipilih.' : 'Belum ada anggota terdaftar. Klik tombol Tambah Anggota untuk memulai.'"
-                    :actionText="!searchQuery && selectedRT === 'all' ? 'Tambah Anggota' : undefined"
-                    :actionHandler="!searchQuery && selectedRT === 'all' ? openAddModal : undefined"
+                    :message="searchQuery || selectedRT !== 'all' ? 'Tidak ada anggota yang sesuai dengan filter yang dipilih.' : 'Belum ada anggota terdaftar.'"
                   />
                 </td>
               </tr>

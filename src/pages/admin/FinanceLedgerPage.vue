@@ -283,7 +283,15 @@ const formatDate = (dateString: string) => {
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Kategori *</label>
-                <input v-model="formData.category" type="text" class="form-input" placeholder="kas, donasi, operasional, dll" required />
+                <select v-model="formData.category" class="form-select" required>
+                  <option value="" disabled>Pilih kategori</option>
+                  <option value="kas">Kas</option>
+                  <option value="donasi">Donasi</option>
+                  <option value="operasional">Operasional</option>
+                  <option value="konsumsi">Konsumsi</option>
+                  <option value="acara">Acara</option>
+                  <option value="lainnya">Lainnya</option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Tanggal *</label>

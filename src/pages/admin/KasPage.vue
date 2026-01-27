@@ -192,7 +192,7 @@ onMounted(async () => {
     document.title = 'Kas Online - PRSDN Admin';
     await Promise.all([
       kasStore.loadPayments(),
-      membersStore.loadMembers(true), // Include all members including admins
+      membersStore.loadMembers(false), // Exclude admin accounts from kas payments
       financeStore.loadTransactions()
     ]);
     kasStore.subscribeToChanges();
@@ -201,6 +201,7 @@ onMounted(async () => {
 });
 
 import BaseCard from '../../components/BaseCard.vue';
+import EmptyState from '../../components/EmptyState.vue';
 import { onMounted } from 'vue';
 
 const saveMonthPayments = async () => {
@@ -220,7 +221,7 @@ const saveMonthPayments = async () => {
     uiStore.showToast('Data kas berhasil disimpan!', 'success');
   } catch (error) {
     console.error(error);
-    uiStore.showToast('Gagal menyimpan data kas. Silakan cek koneksi.', 'error');
+    uiStore.showToast('Gagal menyimpan data kas. Silakan coba lagi atau periksa koneksi internet Anda.', 'error');
   }
 };
 
@@ -356,8 +357,11 @@ const formatCurrency = (amount: number) => {
               </button>
             </div>
           </div>
-          <div class="table-container">
-            <table>
+        </BaseCard>
+        
+        <BaseCard class="table-card" no-padding>
+          <div class="table-scroll-container">
+          <table>
               <thead>
                 <tr>
                   <th>Nama *</th>
@@ -378,8 +382,12 @@ const formatCurrency = (amount: number) => {
                   </td>
                 </tr>
                 <tr v-else-if="filteredMonthData.length === 0">
-                  <td colspan="6" class="text-center text-secondary py-8">
-                    Tidak ada data anggota untuk filter ini
+                  <td colspan="6" class="empty-cell">
+                    <EmptyState
+                      icon="search"
+                      title="Tidak ada data"
+                      :message="searchQuery || filterRT !== 'all' ? 'Tidak ada anggota yang sesuai dengan filter yang dipilih. Coba ubah filter atau reset pencarian.' : 'Belum ada data pembayaran untuk bulan ini.'"
+                    />
                   </td>
                 </tr>
                 <template v-for="(item, index) in filteredMonthData" :key="'row-' + index">
@@ -427,41 +435,34 @@ const formatCurrency = (amount: number) => {
 
 <style scoped>
 .month-detail-card {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
+  margin-bottom: var(--space-4);
 }
 
 .month-detail-card :deep(.card-body) {
   padding: 0;
+}
+
+.table-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-card :deep(.card-body) {
+  padding: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.month-detail-card .table-container {
   flex: 1;
-  overflow-x: auto;
-  overflow-y: visible;
-  min-height: 0;
-  padding: 0;
-  margin: 0;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-/* Force no spacing between header and table */
-.table-container table {
-  margin-top: 0 !important;
-}
-
-.table-container thead {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.table-container thead tr:first-child th {
-  padding-top: var(--space-3);
 }
 
 .page-header {
@@ -626,19 +627,19 @@ const formatCurrency = (amount: number) => {
 }
 
 /* Force proper table layout */
-.table-container table {
+table {
   table-layout: auto;
   width: 100%;
   margin: 0;
   border-spacing: 0;
 }
 
-.table-container thead {
+thead {
   margin: 0;
   padding: 0;
 }
 
-.table-container tbody {
+tbody {
   display: table-row-group !important;
 }
 

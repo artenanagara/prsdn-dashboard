@@ -92,6 +92,16 @@ const router = createRouter({
             name: 'UserAttendanceCheckin',
             component: () => import('../pages/user/AttendanceCheckinPage.vue'),
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/error',
+            name: 'Error',
+            component: () => import('../pages/ErrorPage.vue')
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: 'NotFound',
+            component: () => import('../pages/NotFoundPage.vue')
         }
     ]
 });

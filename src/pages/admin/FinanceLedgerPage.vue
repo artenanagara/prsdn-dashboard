@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
+import EmptyState from '../../components/EmptyState.vue';
 import { useFinanceStore } from '../../stores/finance';
 import { useUIStore } from '../../stores/ui';
 import { Plus, Edit, Trash2 } from 'lucide-vue-next';
@@ -104,7 +105,7 @@ const handleSubmit = async () => {
     resetForm();
     uiStore.showToast(`Transaksi ${editingTransaction.value ? 'berhasil diperbarui' : 'berhasil ditambahkan'}`, 'success');
   } else {
-    uiStore.showToast('Gagal menyimpan transaksi.', 'error');
+    uiStore.showToast('Gagal menyimpan transaksi. Silakan coba lagi atau periksa koneksi internet Anda.', 'error');
   }
 };
 
@@ -206,8 +207,7 @@ const formatDate = (dateString: string) => {
 
       <!-- Transactions Table -->
       <div class="card">
-        <div class="table-container">
-          <table>
+        <table>
             <thead>
               <tr>
                 <th>Tanggal</th>
@@ -229,8 +229,12 @@ const formatDate = (dateString: string) => {
                 </td>
               </tr>
               <tr v-else-if="filteredTransactions.length === 0">
-                <td colspan="7" class="text-center text-secondary">
-                  Tidak ada transaksi
+                <td colspan="7" class="empty-cell">
+                  <EmptyState
+                    icon="inbox"
+                    :title="filterType === 'all' ? 'Tidak ada transaksi' : filterType === 'income' ? 'Tidak ada pemasukan' : 'Tidak ada pengeluaran'"
+                    :message="filterType === 'all' ? 'Belum ada transaksi keuangan. Klik tombol di atas untuk menambahkan transaksi baru.' : filterType === 'income' ? 'Belum ada catatan pemasukan.' : 'Belum ada catatan pengeluaran.'"
+                  />
                 </td>
               </tr>
               <tr v-for="transaction in filteredTransactions" :key="transaction.id">
@@ -259,7 +263,6 @@ const formatDate = (dateString: string) => {
               </tr>
             </tbody>
           </table>
-        </div>
       </div>
 
       <!-- Add/Edit Modal -->

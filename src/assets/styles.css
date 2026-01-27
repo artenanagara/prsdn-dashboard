@@ -399,17 +399,6 @@ input[type="time"].form-input {
 }
 
 /* Tables */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
-  /* Allow sticky table header to work with page scroll if possible */
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  -webkit-overflow-scrolling: touch;
-  margin-bottom: var(--space-4);
-}
-
 table {
   width: 100%;
   border-collapse: separate;
@@ -446,15 +435,6 @@ td {
   white-space: nowrap;
   /* Force 1 line */
   background-color: var(--color-surface);
-}
-
-@media (max-width: 768px) {
-  /* No specific min-width needed as white-space: nowrap will force the width */
-
-  /* Ensure the table doesn't inherit any layout that breaks overflow */
-  .table-container {
-    display: block;
-  }
 }
 
 tbody tr:last-child td {
@@ -604,4 +584,42 @@ tbody tr:hover {
 
 .shadow-lg {
   box-shadow: var(--shadow-lg);
+}
+
+/* Empty cell for tables */
+.empty-cell {
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Centered content */
+.text-center {
+  text-align: center;
+}
+
+.py-8 {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+}
+
+/* Elevated background */
+.color-bg-elevated {
+  background-color: var(--color-surface);
 }

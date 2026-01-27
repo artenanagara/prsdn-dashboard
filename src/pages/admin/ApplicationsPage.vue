@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
+import EmptyState from '../../components/EmptyState.vue';
 import { useApplicationsStore } from '../../stores/applications';
 import { useAuthStore } from '../../stores/auth';
 import { useUIStore } from '../../stores/ui';
@@ -91,8 +92,7 @@ const getStatusText = (status: string) => {
       </div>
 
       <div class="card">
-        <div class="table-container">
-          <table>
+        <table>
             <thead>
               <tr>
                 <th>Nama</th>
@@ -105,9 +105,21 @@ const getStatusText = (status: string) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-if="applications.length === 0">
-                <td colspan="7" class="text-center text-secondary">
-                  Tidak ada permohonan
+              <tr v-if="applicationsStore.isLoading">
+                <td colspan="7" class="text-center py-8">
+                  <div class="flex items-center justify-center gap-2 text-secondary">
+                    <span class="loading-spinner"></span>
+                    <span>Memuat data permohonan...</span>
+                  </div>
+                </td>
+              </tr>
+              <tr v-else-if="applications.length === 0">
+                <td colspan="7" class="empty-cell">
+                  <EmptyState
+                    icon="inbox"
+                    title="Tidak ada permohonan"
+                    message="Belum ada permohonan pendaftaran anggota baru saat ini."
+                  />
                 </td>
               </tr>
               <tr v-for="app in applications" :key="app.id">
@@ -146,7 +158,6 @@ const getStatusText = (status: string) => {
               </tr>
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   </AppShell>

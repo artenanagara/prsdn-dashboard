@@ -103,7 +103,7 @@ const handleDelete = async (id: string, name: string) => {
   if (confirmed) {
     const success = await membersStore.deleteMember(id);
     if (!success) {
-      uiStore.showToast('Gagal menghapus anggota. Pastikan tidak ada data yang bergantung.', 'error');
+      uiStore.showToast('Gagal menghapus anggota. Pastikan tidak ada data terkait yang masih bergantung pada anggota ini.', 'error');
     } else {
       uiStore.showToast(`Anggota ${name} berhasil dihapus`, 'success');
     }
@@ -133,6 +133,7 @@ const openViewModal = async (member: any) => {
 };
 
 import BaseCard from '../../components/BaseCard.vue';
+import EmptyState from '../../components/EmptyState.vue';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
@@ -146,19 +147,21 @@ const formatDate = (dateString: string) => {
 <template>
   <AppShell>
     <div class="members-page">
-      <div class="page-header">
-        <div>
-          <h1>Manajemen Anggota</h1>
-          <p class="text-secondary">Kelola data anggota</p>
+      <BaseCard class="page-header-card">
+        <div class="page-header">
+          <div>
+            <h1>Manajemen Anggota</h1>
+            <p class="text-secondary">Kelola data anggota</p>
+          </div>
+          <button @click="openAddModal" class="btn btn-primary">
+            <Plus :size="20" />
+            <span>Tambah Anggota</span>
+          </button>
         </div>
-        <button @click="openAddModal" class="btn btn-primary">
-          <Plus :size="20" />
-          <span>Tambah Anggota</span>
-        </button>
-      </div>
+      </BaseCard>
 
       <!-- Filters -->
-      <BaseCard class="mb-4 filters-card">
+      <BaseCard class="filters-card">
         <div class="filters">
           <div class="form-group" style="flex: 1; margin: 0;">
             <input
@@ -182,8 +185,8 @@ const formatDate = (dateString: string) => {
 
       <!-- Members Table -->
       <BaseCard class="members-card">
-        <div class="table-container">
-          <table>
+        <div class="table-scroll-container">
+        <table>
             <thead>
               <tr>
                 <th>Nama</th>
@@ -196,9 +199,23 @@ const formatDate = (dateString: string) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-if="filteredMembers.length === 0">
-                <td colspan="7" class="text-center text-secondary">
-                  Tidak ada data
+              <tr v-if="membersStore.isLoading">
+                <td colspan="7" class="text-center py-8">
+                  <div class="flex items-center justify-center gap-2 text-secondary">
+                    <span class="loading-spinner"></span>
+                    <span>Memuat data anggota...</span>
+                  </div>
+                </td>
+              </tr>
+              <tr v-else-if="filteredMembers.length === 0">
+                <td colspan="7" class="empty-cell">
+                  <EmptyState
+                    :icon="searchQuery || selectedRT !== 'all' ? 'search' : 'users'"
+                    title="Tidak ada data"
+                    :message="searchQuery || selectedRT !== 'all' ? 'Tidak ada anggota yang sesuai dengan filter yang dipilih.' : 'Belum ada anggota terdaftar. Klik tombol Tambah Anggota untuk memulai.'"
+                    :actionText="!searchQuery && selectedRT === 'all' ? 'Tambah Anggota' : undefined"
+                    :actionHandler="!searchQuery && selectedRT === 'all' ? openAddModal : undefined"
+                  />
                 </td>
               </tr>
               <tr v-for="member in filteredMembers" :key="member.id">
@@ -441,6 +458,11 @@ const formatDate = (dateString: string) => {
   flex-shrink: 0;
 }
 
+.page-header-card {
+  flex-shrink: 0;
+  margin-bottom: var(--space-4);
+}
+
 .page-header h1 {
   margin-bottom: var(--space-2);
 }
@@ -567,7 +589,7 @@ const formatDate = (dateString: string) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transform: none !important; /* Disable hover lift */
+  transform: none !important;
 }
 
 .members-card :deep(.card-body) {
@@ -575,22 +597,18 @@ const formatDate = (dateString: string) => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0; /* Let table-container handle padding or keep it tight */
+  padding: 0;
+}
+
+.table-scroll-container {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filters-card {
-  height: auto;
   flex-shrink: 0;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  border: none;
-  margin-bottom: 0;
-  border-radius: 0;
-  min-height: 0;
-  -webkit-overflow-scrolling: touch; /* Mobile smoothness */
+  margin-bottom: var(--space-4);
 }
 
 /* Ensure empty state is centered */

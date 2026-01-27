@@ -17,6 +17,7 @@ const currentYear = new Date().getFullYear();
 const selectedYear = ref(currentYear >= 2026 ? currentYear : 2026);
 const selectedMonth = ref<number | null>(null);
 const filterRT = ref('all');
+const searchQuery = ref('');
 
 const years = computed(() => {
   const startYear = 2026;
@@ -106,8 +107,14 @@ const updateMonthData = () => {
         }
     });
 
-    // Sort by name for easier finding
-    currentMonthData.value.sort((a, b) => a.memberName.localeCompare(b.memberName));
+    // Sort by RT first, then by name
+    currentMonthData.value.sort((a, b) => {
+        // First compare RT
+        const rtCompare = a.rt.localeCompare(b.rt);
+        if (rtCompare !== 0) return rtCompare;
+        // If RT is same, compare name
+        return a.memberName.localeCompare(b.memberName);
+    });
 };
 
 watch([selectedMonthKey, () => membersStore.members, () => kasStore.payments], () => {
@@ -115,10 +122,26 @@ watch([selectedMonthKey, () => membersStore.members, () => kasStore.payments], (
 }, { immediate: true });
 
 const filteredMonthData = computed(() => {
-  if (filterRT.value === 'all') {
-    return currentMonthData.value;
+  let result = currentMonthData.value;
+  
+  // Filter by RT
+  if (filterRT.value !== 'all') {
+    result = result.filter(d => d.rt === filterRT.value);
   }
-  return currentMonthData.value.filter(d => d.rt === filterRT.value);
+  
+  // Filter by search query (nama)
+  const trimmedQuery = searchQuery.value.trim();
+  if (trimmedQuery) {
+    const query = trimmedQuery.toLowerCase();
+    result = result.filter(d => d.memberName.toLowerCase().includes(query));
+  }
+  
+  return result;
+});
+
+// Force Vue to re-render table when filtered data changes
+const listKey = computed(() => {
+  return `${selectedMonthKey.value}-${filterRT.value}-${searchQuery.value}-${filteredMonthData.value.length}`;
 });
 
 const currentMonthSummary = computed(() => {
@@ -143,6 +166,9 @@ const kasBalance = computed(() => {
 
 const selectMonth = (monthNum: number) => {
   selectedMonth.value = monthNum;
+  // Reset filters when selecting new month
+  searchQuery.value = '';
+  filterRT.value = 'all';
 };
 
 const togglePaymentStatus = (index: number) => {
@@ -166,7 +192,7 @@ onMounted(async () => {
     document.title = 'Kas Online - PRSDN Admin';
     await Promise.all([
       kasStore.loadPayments(),
-      membersStore.loadMembers(),
+      membersStore.loadMembers(true), // Include all members including admins
       financeStore.loadTransactions()
     ]);
     kasStore.subscribeToChanges();
@@ -282,19 +308,6 @@ const formatCurrency = (amount: number) => {
           </template>
           
           <div class="month-card-content">
-            <div class="payment-progress mb-4">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-secondary">Progress Pelunasan</span>
-                <span class="font-semibold">{{ Math.round((monthSummary.paidCount / (monthSummary.total || 1)) * 100) }}%</span>
-              </div>
-              <div class="progress-bar-bg">
-                <div 
-                  class="progress-bar-fill" 
-                  :style="{ width: `${(monthSummary.paidCount / (monthSummary.total || 1)) * 100}%` }"
-                ></div>
-              </div>
-            </div>
-            
             <div class="stats-mini-grid">
               <div class="stat-mini">
                 <span class="label">Terbayar</span>
@@ -311,16 +324,23 @@ const formatCurrency = (amount: number) => {
 
       <!-- Month Detail -->
       <div v-else class="flex flex-col flex-1 min-h-0">
-        <BaseCard class="mb-4 month-detail-header-card">
-          <div class="month-detail-header">
-            <div>
+        <BaseCard class="month-detail-card" no-padding>
+          <div class="table-header-row">
+            <div class="table-header-info">
               <h2>{{ selectedMonth ? months[selectedMonth - 1]?.name : '' }} {{ selectedYear }}</h2>
               <p class="text-secondary text-sm">
                 {{ currentMonthSummary.paidCount }} dari {{ currentMonthSummary.total }} anggota sudah membayar
               </p>
             </div>
-            <div class="month-detail-actions">
-              <select v-model="filterRT" class="form-select">
+            <div class="table-header-actions">
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="form-input"
+                placeholder="Cari nama..."
+                style="max-width: 100%;"
+              >
+              <select v-model="filterRT" class="form-select" style="max-width: 200px;">
                 <option value="all">Semua RT</option>
                 <option value="01">RT 01</option>
                 <option value="02">RT 02</option>
@@ -336,9 +356,6 @@ const formatCurrency = (amount: number) => {
               </button>
             </div>
           </div>
-        </BaseCard>
-
-        <BaseCard class="month-detail-card" no-padding>
           <div class="table-container">
             <table>
               <thead>
@@ -351,7 +368,7 @@ const formatCurrency = (amount: number) => {
                   <th>Aksi</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody :key="listKey">
                 <tr v-if="membersStore.isLoading">
                   <td colspan="6" class="text-center py-8">
                     <div class="flex items-center justify-center gap-2 text-secondary">
@@ -365,38 +382,40 @@ const formatCurrency = (amount: number) => {
                     Tidak ada data anggota untuk filter ini
                   </td>
                 </tr>
-                <tr v-for="(item, index) in filteredMonthData" :key="item.memberId">
-                  <td class="font-medium">{{ item.memberName }}</td>
-                  <td><span class="badge badge-secondary">RT {{ item.rt }}</span></td>
-                  <td>
-                    <div class="input-with-prefix">
-                      <span class="input-prefix" style="left: 0.5rem; font-size: 0.75rem;">Rp</span>
-                      <input
-                        :value="formatCurrencyInput(item.amount)"
-                        @input="handleTableAmountInput(index, $event)"
-                        type="text"
-                        class="form-input text-sm"
-                        style="max-width: 120px; padding-left: 2rem;"
-                      />
-                    </div>
-                  </td>
-                  <td>
-                    <span :class="['badge', item.status === 'paid' ? 'badge-success' : 'badge-warning']">
-                      {{ item.status === 'paid' ? 'Lunas' : 'Belum Bayar' }}
-                    </span>
-                  </td>
-                  <td class="text-sm text-secondary">
-                    {{ item.paidAt ? new Date(item.paidAt).toLocaleDateString('id-ID') : '-' }}
-                  </td>
-                  <td>
-                    <button
-                      @click="togglePaymentStatus(index)"
-                      :class="['btn', 'btn-sm', item.status === 'paid' ? 'btn-danger' : 'btn-primary']"
-                    >
-                      {{ item.status === 'paid' ? 'Batalkan' : 'Tandai Lunas' }}
-                    </button>
-                  </td>
-                </tr>
+                <template v-for="(item, index) in filteredMonthData" :key="'row-' + index">
+                  <tr class="kas-table-row">
+                    <td class="font-medium">{{ item.memberName }}</td>
+                    <td><span class="badge badge-secondary">RT {{ item.rt }}</span></td>
+                    <td>
+                      <div class="input-with-prefix">
+                        <span class="input-prefix" style="left: 0.5rem; font-size: 0.75rem;">Rp</span>
+                        <input
+                          :value="formatCurrencyInput(item.amount)"
+                          @input="handleTableAmountInput(index, $event)"
+                          type="text"
+                          class="form-input text-sm"
+                          style="max-width: 120px; padding-left: 2rem;"
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <span :class="['badge', item.status === 'paid' ? 'badge-success' : 'badge-warning']">
+                        {{ item.status === 'paid' ? 'Lunas' : 'Belum Bayar' }}
+                      </span>
+                    </td>
+                    <td class="text-sm text-secondary">
+                      {{ item.paidAt ? new Date(item.paidAt).toLocaleDateString('id-ID') : '-' }}
+                    </td>
+                    <td>
+                      <button
+                        @click="togglePaymentStatus(index)"
+                        :class="['btn', 'btn-sm', item.status === 'paid' ? 'btn-danger' : 'btn-primary']"
+                      >
+                        {{ item.status === 'paid' ? 'Batalkan' : 'Tandai Lunas' }}
+                      </button>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>
@@ -423,9 +442,26 @@ const formatCurrency = (amount: number) => {
 
 .month-detail-card .table-container {
   flex: 1;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: visible;
   min-height: 0;
+  padding: 0;
+  margin: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Force no spacing between header and table */
+.table-container table {
+  margin-top: 0 !important;
+}
+
+.table-container thead {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.table-container thead tr:first-child th {
+  padding-top: var(--space-3);
 }
 
 .page-header {
@@ -492,20 +528,6 @@ const formatCurrency = (amount: number) => {
   flex-direction: column;
 }
 
-.progress-bar-bg {
-  height: 8px;
-  background-color: var(--color-bg);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-info));
-  border-radius: 4px;
-  transition: width 1s ease-out;
-}
-
 .stats-mini-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -536,15 +558,88 @@ const formatCurrency = (amount: number) => {
   flex-shrink: 0; /* Prevent header stretching */
 }
 
-.month-detail-header {
+/* Compact table header - vertical layout */
+.table-header-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-elevated);
 }
 
-.month-detail-actions {
+.table-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.table-header-info h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.table-header-info p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.table-header-actions {
   display: flex;
   gap: var(--space-3);
+  align-items: center;
+  flex-direction: row;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .table-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .table-header-actions .form-input,
+  .table-header-actions .form-select,
+  .table-header-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Ensure table rows are visible and not collapsed */
+.kas-table-row {
+  min-height: 60px !important;
+  height: auto !important;
+  display: table-row !important;
+  visibility: visible !important;
+}
+
+.kas-table-row td {
+  min-height: 60px !important;
+  padding: var(--space-3) var(--space-4) !important;
+  vertical-align: middle !important;
+  display: table-cell !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force proper table layout */
+.table-container table {
+  table-layout: auto;
+  width: 100%;
+  margin: 0;
+  border-spacing: 0;
+}
+
+.table-container thead {
+  margin: 0;
+  padding: 0;
+}
+
+.table-container tbody {
+  display: table-row-group !important;
 }
 
 @media (max-width: 768px) {

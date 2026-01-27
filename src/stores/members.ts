@@ -29,7 +29,7 @@ export const useMembersStore = defineStore('members', () => {
     const loadMembers = async (includeAdmins: boolean = true) => {
         isLoading.value = true;
         try {
-            let query = supabase
+            const { data, error } = await supabase
                 .from('members')
                 .select(`
                     *,
@@ -37,16 +37,10 @@ export const useMembersStore = defineStore('members', () => {
                 `)
                 .order('created_at', { ascending: false });
 
-            // If includeAdmins is false, filter out admin accounts
-            if (!includeAdmins) {
-                query = query.eq('user_accounts.role', 'user');
-            }
-
-            const { data, error } = await query;
-
             if (error) throw error;
 
-            members.value = ((data || []) as any[]).map((record: any) => ({
+            // Map and filter the data
+            let mappedMembers = ((data || []) as any[]).map((record: any) => ({
                 id: record.id,
                 fullName: record.full_name,
                 birthPlace: record.birth_place,
@@ -57,8 +51,17 @@ export const useMembersStore = defineStore('members', () => {
                 job: record.job,
                 educationStatus: record.education_status,
                 educationLevel: record.education_level,
-                createdAt: record.created_at
+                createdAt: record.created_at,
+                userRole: record.user_accounts?.role
             }));
+
+            // If includeAdmins is false, filter out members with admin role
+            if (!includeAdmins) {
+                mappedMembers = mappedMembers.filter(member => member.userRole !== 'admin');
+            }
+
+            // Remove userRole from final data
+            members.value = mappedMembers.map(({ userRole, ...member }) => member);
         } catch (error) {
             console.error('Error loading members:', error);
         } finally {

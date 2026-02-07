@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApplicationsStore } from '../stores/applications';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-vue-next';
+import BaseDatePicker from '../components/BaseDatePicker.vue';
 
 const router = useRouter();
 const applicationsStore = useApplicationsStore();
@@ -137,6 +138,14 @@ const handleSubmit = async () => {
     isCheckingDuplicates.value = false;
   }
 };
+
+const toTitleCase = (str: string) => {
+  return str.replace(/\b\w/g, char => char.toUpperCase());
+};
+
+const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value: string) => {
+  step1Data.value[field] = toTitleCase(value);
+};
 </script>
 
 <template>
@@ -163,17 +172,29 @@ const handleSubmit = async () => {
         <form v-if="currentStep === 1" class="apply-form">
           <div class="form-group">
             <label class="form-label">Nama Lengkap *</label>
-            <input v-model="step1Data.fullName" type="text" class="form-input" required />
+            <input 
+              :value="step1Data.fullName" 
+              @input="e => handleCapitalize('fullName', (e.target as HTMLInputElement).value)"
+              type="text" 
+              class="form-input" 
+              required 
+            />
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Tempat Lahir *</label>
-              <input v-model="step1Data.birthPlace" type="text" class="form-input" required />
+              <input 
+                :value="step1Data.birthPlace" 
+                @input="e => handleCapitalize('birthPlace', (e.target as HTMLInputElement).value)"
+                type="text" 
+                class="form-input" 
+                required 
+              />
             </div>
             <div class="form-group">
               <label class="form-label">Tanggal Lahir *</label>
-              <input v-model="step1Data.birthDate" type="date" class="form-input" required />
+              <BaseDatePicker v-model="step1Data.birthDate" placeholder="Pilih tanggal lahir" required />
             </div>
           </div>
 
@@ -239,7 +260,8 @@ const handleSubmit = async () => {
           <div v-if="step1Data.job === 'Mahasiswa'" class="form-group">
             <label class="form-label">Universitas *</label>
             <input 
-              v-model="step1Data.university" 
+              :value="step1Data.university" 
+              @input="e => handleCapitalize('university', (e.target as HTMLInputElement).value)"
               type="text" 
               class="form-input" 
               placeholder="Nama universitas" 
@@ -390,11 +412,7 @@ const handleSubmit = async () => {
   margin-bottom: var(--space-6);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
+
 
 .apply-actions {
   display: flex;

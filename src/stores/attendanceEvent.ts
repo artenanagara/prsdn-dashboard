@@ -66,7 +66,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
         try {
             // Generate initial token when creating event
             const initialToken = generateToken();
-            const tokenExpiresAt = Date.now() + 30000; // 30 seconds
+            const tokenExpiresAt = Date.now() + 60000; // 60 seconds (1 minute)
 
             const { data: insertedData, error } = await (supabase
                 .from('attendance_events') as any)
@@ -158,7 +158,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
 
             // Generate new token when activating
             const newToken = generateToken();
-            const expiresAt = Date.now() + 30000; // 30 seconds
+            const expiresAt = Date.now() + 60000; // 60 seconds (1 minute)
 
             // Activate the selected event with new token
             const { error } = await (supabase
@@ -207,7 +207,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
 
         try {
             const token = generateToken();
-            const expiresAt = Date.now() + 30000; // 30 seconds
+            const expiresAt = Date.now() + 60000; // 60 seconds (1 minute)
 
             const { error } = await (supabase
                 .from('attendance_events') as any)

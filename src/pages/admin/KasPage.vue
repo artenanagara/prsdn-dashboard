@@ -394,7 +394,7 @@ const formatCurrency = (amount: number) => {
                 </tr>
                 <template v-for="(item, index) in filteredMonthData" :key="'row-' + index">
                   <tr class="kas-table-row">
-                    <td class="font-medium">{{ item.memberName }}</td>
+                    <td class="font-medium capitalize">{{ item.memberName }}</td>
                     <td><span class="badge badge-secondary">RT {{ item.rt }}</span></td>
                     <td>
                       <div class="input-with-prefix">

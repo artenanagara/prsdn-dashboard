@@ -247,6 +247,19 @@ p {
   margin-bottom: var(--space-4);
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 .form-label {
   display: block;
   margin-bottom: var(--space-2);
@@ -594,6 +607,15 @@ tbody tr:hover td {
 
 .rounded-lg {
   border-radius: var(--radius-lg);
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.modal-body,
+.modal-body-content {
+  padding: var(--space-6);
 }
 
 .shadow-sm {

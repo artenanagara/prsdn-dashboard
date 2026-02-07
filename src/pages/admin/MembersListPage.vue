@@ -3,8 +3,13 @@ import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import { useMembersStore } from '../../stores/members';
 import { useUIStore } from '../../stores/ui';
-import { Edit, Trash2, Eye } from 'lucide-vue-next';
+import {
+  Trash2,
+  Eye,
+} from 'lucide-vue-next';
 import { supabase } from '../../lib/supabase';
+import BaseCard from '../../components/BaseCard.vue';
+import BaseDatePicker from '../../components/BaseDatePicker.vue';
 
 const membersStore = useMembersStore();
 const uiStore = useUIStore();
@@ -30,7 +35,7 @@ const formData = ref({
 });
 
 const filteredMembers = computed(() => {
-  let result = membersStore.members;
+  let result = [...membersStore.members];
 
   if (searchQuery.value) {
     result = membersStore.searchMembers(searchQuery.value);
@@ -40,7 +45,15 @@ const filteredMembers = computed(() => {
     result = result.filter(m => m.rt === selectedRT.value);
   }
 
-  return result;
+  // Sort by RT first, then by fullName
+  return result.sort((a, b) => {
+    const rtA = a.rt || '';
+    const rtB = b.rt || '';
+    if (rtA !== rtB) {
+      return rtA.localeCompare(rtB);
+    }
+    return (a.fullName || '').localeCompare(b.fullName || '');
+  });
 });
 
 const openEditModal = (member: any) => {
@@ -126,11 +139,9 @@ const openViewModal = async (member: any) => {
   showViewModal.value = true;
 };
 
-import BaseCard from '../../components/BaseCard.vue';
-import EmptyState from '../../components/EmptyState.vue';
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('id-ID', {
+const formatDate = (date: string | null) => {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
@@ -208,7 +219,7 @@ const formatDate = (dateString: string) => {
                 </td>
               </tr>
               <tr v-for="member in filteredMembers" :key="member.id">
-                <td class="font-medium">{{ member.fullName }}</td>
+                <td class="font-medium capitalize">{{ member.fullName }}</td>
                 <td><span class="badge badge-secondary">RT {{ member.rt }}</span></td>
                 <td>{{ member.phone }}</td>
                 <td>{{ member.job }}</td>
@@ -260,7 +271,7 @@ const formatDate = (dateString: string) => {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Tanggal Lahir *</label>
-                  <input v-model="formData.birthDate" type="date" class="form-input" required />
+                  <BaseDatePicker v-model="formData.birthDate" required />
                 </div>
               </div>
 
@@ -367,21 +378,25 @@ const formatDate = (dateString: string) => {
                       </span>
                     </span>
                   </div>
-                  <div class="detail-item" v-if="viewingMember.educationLevel">
+                  <div class="detail-item" v-if="viewingMember.educationStatus === 'school'">
                     <span class="detail-label">Jenjang Pendidikan:</span>
-                    <span class="detail-value">{{ viewingMember.educationLevel }}</span>
+                    <span class="detail-value">{{ viewingMember.educationLevel || '-' }}</span>
                   </div>
-                  <div class="detail-item" v-if="viewingMember.grade">
+                  <div class="detail-item" v-if="viewingMember.educationLevel === 'SD' || viewingMember.educationLevel === 'SMP' || viewingMember.educationLevel === 'SMA/SMK'">
                     <span class="detail-label">Kelas:</span>
-                    <span class="detail-value">{{ viewingMember.grade }}</span>
+                    <span class="detail-value">{{ viewingMember.grade || '-' }}</span>
                   </div>
-                  <div class="detail-item" v-if="viewingMember.university">
+                  <div class="detail-item" v-if="viewingMember.educationLevel === 'College'">
                     <span class="detail-label">Universitas:</span>
-                    <span class="detail-value">{{ viewingMember.university }}</span>
+                    <span class="detail-value">{{ viewingMember.university || '-' }}</span>
                   </div>
-                  <div class="detail-item" v-if="viewingMember.joinedWhatsApp !== undefined">
+                  <div class="detail-item">
                     <span class="detail-label">Grup WhatsApp:</span>
-                    <span class="detail-value">{{ viewingMember.joinedWhatsApp ? 'Sudah bergabung' : 'Belum bergabung' }}</span>
+                    <span class="detail-value text-sm">
+                      <span :class="['badge', viewingMember.joinedWhatsApp ? 'badge-success' : 'badge-secondary']">
+                        {{ viewingMember.joinedWhatsApp ? 'Sudah bergabung' : 'Belum bergabung' }}
+                      </span>
+                    </span>
                   </div>
                   <div class="detail-item">
                     <span class="detail-label">Bergabung:</span>
@@ -463,11 +478,7 @@ const formatDate = (dateString: string) => {
   gap: var(--space-2);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
+
 
 .modal-overlay {
   position: fixed;
@@ -497,6 +508,12 @@ const formatDate = (dateString: string) => {
   width: 100%;
 }
 
+.modal-body-content {
+  padding: var(--space-6);
+  flex: 1;
+  overflow-y: visible;
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
@@ -507,9 +524,7 @@ const formatDate = (dateString: string) => {
     flex-direction: column;
   }
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+
 }
 
 /* View Details Styling */

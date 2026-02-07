@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import AppShell from '../../components/AppShell.vue';
+import BaseCard from '../../components/BaseCard.vue';
+import BaseDatePicker from '../../components/BaseDatePicker.vue';
 import CardStat from '../../components/CardStat.vue';
 import EmptyState from '../../components/EmptyState.vue';
 import { useFinanceStore } from '../../stores/finance';
@@ -20,12 +22,19 @@ const showModal = ref(false);
 const editingTransaction = ref<any>(null);
 const filterType = ref<'all' | 'income' | 'expense'>('all');
 
-const formData = ref({
-  type: 'income' as 'income' | 'expense',
+const formData = ref<{
+  type: 'income' | 'expense';
+  category: string;
+  title: string;
+  amount: number;
+  date: string | null;
+  note: string;
+}>({
+  type: 'income',
   category: '',
   title: '',
   amount: 0,
-  date: new Date().toISOString().split('T')[0],
+  date: new Date().toLocaleDateString('sv-SE') || null,
   note: ''
 });
 
@@ -62,7 +71,7 @@ const resetForm = () => {
     category: '',
     title: '',
     amount: 0,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('sv-SE'), // sv-SE is YYYY-MM-DD
     note: ''
   };
 };
@@ -297,7 +306,7 @@ const formatDate = (dateString: string) => {
               </div>
               <div class="form-group">
                 <label class="form-label">Tanggal *</label>
-                <input v-model="formData.date" type="date" class="form-input" required />
+                <BaseDatePicker v-model="formData.date" required />
               </div>
             </div>
 
@@ -416,11 +425,7 @@ const formatDate = (dateString: string) => {
   gap: var(--space-2);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
+
 
 .modal-overlay {
   position: fixed;
@@ -453,7 +458,7 @@ const formatDate = (dateString: string) => {
 
 .modal-body {
   padding: var(--space-6);
-  overflow-y: auto;
+  overflow-y: visible;
   flex: 1;
 }
 

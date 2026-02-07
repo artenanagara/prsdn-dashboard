@@ -334,7 +334,7 @@ onMounted(async () => {
                 </td>
               </tr>
               <tr v-for="member in filteredMembers" :key="member.id">
-                <td class="font-medium">{{ member.fullName }}</td>
+                <td class="font-medium capitalize">{{ member.fullName }}</td>
                 <td><span class="badge badge-secondary">RT {{ member.rt }}</span></td>
                 <td>{{ member.phone }}</td>
                 <td>{{ member.job }}</td>

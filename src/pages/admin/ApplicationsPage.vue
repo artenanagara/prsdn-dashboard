@@ -127,7 +127,7 @@ const getStatusText = (status: string) => {
                 </td>
               </tr>
               <tr v-for="app in applications" :key="app.id">
-                <td class="font-medium">{{ app.step1Data.fullName }}</td>
+                <td class="font-medium capitalize">{{ app.step1Data.fullName }}</td>
                 <td><span class="badge badge-secondary">RT {{ app.step1Data.rt }}</span></td>
                 <td>{{ app.step1Data.phone }}</td>
                 <td>{{ app.username }}</td>

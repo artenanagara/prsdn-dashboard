@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 
 interface Props {
   expiresAt: number; // epoch ms
@@ -37,9 +37,26 @@ const colorClass = computed(() => {
   return 'countdown-active';
 });
 
-onMounted(() => {
+const startCountdown = () => {
+  // Clear existing interval if any
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  
+  // Update immediately
   updateCountdown();
+  
+  // Start new interval
   intervalId = window.setInterval(updateCountdown, 250);
+};
+
+// Watch for changes in expiresAt prop (when token is regenerated)
+watch(() => props.expiresAt, () => {
+  startCountdown();
+});
+
+onMounted(() => {
+  startCountdown();
 });
 
 onUnmounted(() => {

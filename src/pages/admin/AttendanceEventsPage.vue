@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import CountdownTimer from '../../components/CountdownTimer.vue';
+import BaseCard from '../../components/BaseCard.vue';
+import BaseDatePicker from '../../components/BaseDatePicker.vue';
 import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useMembersStore } from '../../stores/members';
@@ -332,7 +334,7 @@ const formatDateTime = (timestamp: number) => {
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Tanggal *</label>
-                <input v-model="formData.date" type="date" class="form-input" />
+                <BaseDatePicker v-model="formData.date" required />
               </div>
             </div>
 
@@ -544,11 +546,7 @@ thead {
   gap: var(--space-4);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
+
 
 .modal-overlay {
   position: fixed;
@@ -581,7 +579,7 @@ thead {
 
 .modal-body {
   padding: var(--space-6);
-  overflow-y: auto;
+  overflow-y: visible;
   flex: 1;
 }
 

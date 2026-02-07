@@ -361,6 +361,7 @@ const formatCurrency = (amount: number) => {
         </BaseCard>
         
         <BaseCard class="table-card" no-padding>
+          <div class="table-container">
           <div class="table-scroll-container">
           <table>
               <thead>
@@ -426,6 +427,7 @@ const formatCurrency = (amount: number) => {
                 </template>
               </tbody>
             </table>
+          </div>
           </div>
         </BaseCard>
       </div>

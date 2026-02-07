@@ -175,6 +175,7 @@ const formatDate = (dateString: string) => {
 
       <!-- Members Table -->
       <BaseCard class="members-card">
+        <div class="table-container">
         <div class="table-scroll-container">
         <table>
             <thead>
@@ -234,6 +235,7 @@ const formatDate = (dateString: string) => {
               </tr>
             </tbody>
           </table>
+        </div>
         </div>
       </BaseCard>
 

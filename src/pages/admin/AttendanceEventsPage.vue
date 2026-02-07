@@ -247,68 +247,70 @@ const formatDateTime = (timestamp: number) => {
       </div>
 
       <!-- Events List -->
-      <div class="card events-list-card">
+      <BaseCard class="events-card">
         <div class="card-header">
           <h3>Semua Event</h3>
         </div>
         <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Judul</th>
-                <th>Tanggal</th>
-                <th>Waktu</th>
-                <th>Status</th>
-                <th>Check-ins</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="eventStore.events.length === 0">
-                <td colspan="6" class="text-center text-secondary">Belum ada event</td>
-              </tr>
-              <tr v-for="event in eventStore.events" :key="event.id">
-                <td class="font-medium">{{ event.title }}</td>
-                <td>{{ formatDate(event.date) }}</td>
-                <td class="text-sm">{{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}</td>
-                <td>
-                  <span :class="['badge', event.isActive ? 'badge-success' : 'badge-secondary']">
-                    {{ event.isActive ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                <td>
-                  <button @click="openDetail(event.id)" class="btn btn-sm btn-secondary">
-                    <Users :size="16" />
-                    <span>{{ checkinStore.getCheckinsByEvent(event.id).length }}</span>
-                  </button>
-                </td>
-                <td>
-                  <div class="action-buttons">
-                    <button
-                      v-if="!event.isActive"
-                      @click="handleActivate(event.id)"
-                      class="btn btn-sm"
-                      style="background-color: var(--color-success); color: white;"
-                    >
-                      <Play :size="16" />
+          <div class="table-scroll-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Judul</th>
+                  <th>Tanggal</th>
+                  <th>Waktu</th>
+                  <th>Status</th>
+                  <th>Check-ins</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="eventStore.events.length === 0">
+                  <td colspan="6" class="text-center text-secondary">Belum ada event</td>
+                </tr>
+                <tr v-for="event in eventStore.events" :key="event.id">
+                  <td class="font-medium">{{ event.title }}</td>
+                  <td>{{ formatDate(event.date) }}</td>
+                  <td class="text-sm">{{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}</td>
+                  <td>
+                    <span :class="['badge', event.isActive ? 'badge-success' : 'badge-secondary']">
+                      {{ event.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button @click="openDetail(event.id)" class="btn btn-sm btn-secondary">
+                      <Users :size="16" />
+                      <span>{{ checkinStore.getCheckinsByEvent(event.id).length }}</span>
                     </button>
-                    <button
-                      v-if="event.isActive"
-                      @click="handleGenerateToken(event.id)"
-                      class="btn btn-primary btn-sm"
-                    >
-                      <RefreshCw :size="16" />
-                    </button>
-                    <button @click="handleDelete(event.id, event.title)" class="btn btn-danger btn-sm">
-                      <Trash2 :size="16" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button
+                        v-if="!event.isActive"
+                        @click="handleActivate(event.id)"
+                        class="btn btn-sm"
+                        style="background-color: var(--color-success); color: white;"
+                      >
+                        <Play :size="16" />
+                      </button>
+                      <button
+                        v-if="event.isActive"
+                        @click="handleGenerateToken(event.id)"
+                        class="btn btn-primary btn-sm"
+                      >
+                        <RefreshCw :size="16" />
+                      </button>
+                      <button @click="handleDelete(event.id, event.title)" class="btn btn-danger btn-sm">
+                        <Trash2 :size="16" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </BaseCard>
 
       <!-- Create Event Modal -->
       <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">

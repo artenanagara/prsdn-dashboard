@@ -94,6 +94,7 @@ const getStatusText = (status: string) => {
       </BaseCard>
 
       <BaseCard class="table-card">
+        <div class="table-container">
         <div class="table-scroll-container">
         <table>
             <thead>
@@ -161,6 +162,7 @@ const getStatusText = (status: string) => {
               </tr>
             </tbody>
           </table>
+        </div>
         </div>
       </BaseCard>
     </div>

@@ -28,6 +28,10 @@ onMounted(async () => {
     checkinStore.loadCheckins(),
     membersStore.loadMembers()
   ]);
+  
+  // Subscribe to realtime changes
+  checkinStore.subscribeToChanges();
+  eventStore.subscribeToChanges();
 });
 
 const member = computed(() => {

@@ -432,22 +432,18 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .members-page {
   max-width: 1400px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  width: 100%;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-4); /* Reduced from space-8 */
+  margin-bottom: var(--space-4);
   flex-shrink: 0;
 }
 
 .page-header-card {
-  flex-shrink: 0;
   margin-bottom: var(--space-4);
 }
 
@@ -458,7 +454,6 @@ const formatDate = (dateString: string) => {
 .filters {
   display: flex;
   gap: var(--space-4);
-  flex-shrink: 0;
 }
 
 .action-buttons {
@@ -480,7 +475,7 @@ const formatDate = (dateString: string) => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center; /* Center vertically */
+  align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: var(--space-6);
@@ -490,10 +485,8 @@ const formatDate = (dateString: string) => {
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
-  overflow: visible; /* Prevent clipping of teleported dropdowns */
+  overflow: visible;
 }
-
-
 
 .modal-actions {
   display: flex;
@@ -571,31 +564,22 @@ const formatDate = (dateString: string) => {
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
 }
+
 .members-card {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transform: none !important;
+  margin-bottom: var(--space-6);
 }
 
 .members-card :deep(.card-body) {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
   padding: 0;
 }
 
 .table-scroll-container {
-  flex: 1;
-  overflow: auto;
+  width: 100%;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .filters-card {
-  flex-shrink: 0;
   margin-bottom: var(--space-4);
 }
 
@@ -604,12 +588,13 @@ const formatDate = (dateString: string) => {
   text-align: center;
 }
 
-/* Make table header sticky relative to table-container */
-thead {
+/* Page-level sticky header */
+thead th {
   position: sticky;
   top: 0;
   z-index: 10;
   background-color: var(--color-bg-secondary);
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {

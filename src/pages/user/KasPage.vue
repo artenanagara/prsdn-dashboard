@@ -43,8 +43,13 @@ const getMonthName = (monthKey: string | undefined) => {
   return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 };
 
-onMounted(() => {
+onMounted(async () => {
   document.title = 'Kas Saya - PRSDN Dashboard';
+  
+  await kasStore.loadPayments();
+  
+  // Subscribe to realtime changes
+  kasStore.subscribeToChanges();
 });
 </script>
 

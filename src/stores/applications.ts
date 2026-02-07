@@ -59,9 +59,9 @@ export const useApplicationsStore = defineStore('applications', () => {
         return applications.value.find(app => app.id === id);
     };
 
-    const submitApplication = async (data: Omit<AccountApplication, 'id' | 'status' | 'submittedAt'>): Promise<AccountApplication | null> => {
+    const submitApplication = async (data: Omit<AccountApplication, 'id' | 'status' | 'submittedAt'>): Promise<{ success: boolean; error?: string }> => {
         try {
-            const { data: insertedData, error } = await supabase
+            const { error } = await supabase
                 .from('account_applications')
                 .insert({
                     full_name: data.step1Data.fullName,
@@ -83,21 +83,59 @@ export const useApplicationsStore = defineStore('applications', () => {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                if (error.code === '23505') {
+                    return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+                }
+                throw error;
+            }
 
             await loadApplications();
 
-            return {
-                id: (insertedData as any).id,
-                step1Data: data.step1Data,
-                username: data.username,
-                password: data.password,
-                status: 'pending',
-                submittedAt: (insertedData as any).submitted_at
-            };
+            return { success: true };
         } catch (error) {
             console.error('Error submitting application:', error);
-            return null;
+            return { success: false, error: 'Gagal mengirim pendaftaran. Silakan coba lagi.' };
+        }
+    };
+
+    const checkDuplicates = async (username: string, phone: string): Promise<{ usernameTaken: boolean; phoneTaken: boolean }> => {
+        try {
+            // Check in account_applications (pending)
+            const { data: appData, error: appError } = await supabase
+                .from('account_applications')
+                .select('username, phone')
+                .or(`username.eq.${username},phone.eq.${phone}`)
+                .neq('status', 'rejected');
+
+            if (appError) throw appError;
+
+            // Cast appData to help TS
+            const apps = (appData || []) as { username: string; phone: string }[];
+
+            // Check in user_accounts (for username)
+            const { data: userData, error: userError } = await supabase
+                .from('user_accounts')
+                .select('username')
+                .eq('username', username);
+
+            if (userError) throw userError;
+
+            // Check in members (for phone)
+            const { data: memberData, error: memberError } = await supabase
+                .from('members')
+                .select('phone')
+                .eq('phone', phone);
+
+            if (memberError) throw memberError;
+
+            const usernameTaken = (apps.some(a => a.username === username) || userData?.length > 0);
+            const phoneTaken = (apps.some(a => a.phone === phone) || memberData?.length > 0);
+
+            return { usernameTaken, phoneTaken };
+        } catch (error) {
+            console.error('Error checking duplicates:', error);
+            return { usernameTaken: false, phoneTaken: false };
         }
     };
 
@@ -206,6 +244,7 @@ export const useApplicationsStore = defineStore('applications', () => {
         submitApplication,
         approveApplication,
         rejectApplication,
+        checkDuplicates,
         subscribeToChanges
     };
 });

@@ -52,8 +52,23 @@ const canSubmit = computed(() => {
   return username.value && password.value && password.value === confirmPassword.value && password.value.length >= 6;
 });
 
-const nextStep = () => {
-  if (currentStep.value < totalSteps) {
+const isCheckingDuplicates = ref(false);
+
+const nextStep = async () => {
+  if (currentStep.value === 1) {
+    errors.value = {};
+    isCheckingDuplicates.value = true;
+    try {
+      const { phoneTaken } = await applicationsStore.checkDuplicates('', step1Data.value.phone);
+      if (phoneTaken) {
+        errors.value.phone = 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password';
+        return;
+      }
+      currentStep.value++;
+    } finally {
+      isCheckingDuplicates.value = false;
+    }
+  } else if (currentStep.value < totalSteps) {
     currentStep.value++;
   }
 };
@@ -93,21 +108,33 @@ const handleSubmit = async () => {
     educationLevel = 'College';
   }
 
-  const applicationData = {
-    step1Data: {
-      ...step1Data.value,
-      educationStatus,
-      educationLevel
-    },
-    username: username.value,
-    password: password.value
-  };
+  isCheckingDuplicates.value = true;
+  try {
+    const applicationData = {
+      step1Data: {
+        ...step1Data.value,
+        educationStatus,
+        educationLevel
+      },
+      username: username.value,
+      password: password.value
+    };
 
-  const result = await applicationsStore.submitApplication(applicationData);
-  if (result) {
-    router.push('/pending');
-  } else {
-    errors.value.submit = 'Gagal mengirim pendaftaran. Silakan coba lagi.';
+    const result = await applicationsStore.submitApplication(applicationData);
+    if (result.success) {
+      router.push('/pending');
+    } else {
+      errors.value.submit = result.error || 'Gagal mengirim pendaftaran. Silakan coba lagi.';
+      if (result.error?.includes('Username')) {
+        errors.value.username = result.error;
+      }
+      if (result.error?.includes('Nomor HP')) {
+        errors.value.phone = result.error;
+        currentStep.value = 1; // Back to step 1 if phone error
+      }
+    }
+  } finally {
+    isCheckingDuplicates.value = false;
   }
 };
 </script>
@@ -162,7 +189,8 @@ const handleSubmit = async () => {
             </div>
             <div class="form-group">
               <label class="form-label">No. HP *</label>
-              <input v-model="step1Data.phone" type="tel" class="form-input" placeholder="08xxxxxxxxxx" required />
+              <input v-model="step1Data.phone" type="tel" class="form-input" :class="{ 'error': errors.phone }" placeholder="08xxxxxxxxxx" required />
+              <small v-if="errors.phone" class="text-xs text-error mt-1 block">{{ errors.phone }}</small>
             </div>
           </div>
 
@@ -234,7 +262,8 @@ const handleSubmit = async () => {
         <form v-if="currentStep === 2" class="apply-form" @submit.prevent="handleSubmit">
           <div class="form-group">
             <label class="form-label">Username *</label>
-            <input v-model="username" type="text" class="form-input" required />
+            <input v-model="username" type="text" class="form-input" :class="{ 'error': errors.username }" required />
+            <small v-if="errors.username" class="text-xs text-error mt-1 block">{{ errors.username }}</small>
           </div>
 
           <div class="form-group">
@@ -248,8 +277,8 @@ const handleSubmit = async () => {
             <input v-model="confirmPassword" type="password" class="form-input" required />
           </div>
 
-          <div v-if="errors.password" class="form-error">
-            {{ errors.password }}
+          <div v-if="errors.submit" class="form-error">
+            {{ errors.submit }}
           </div>
         </form>
 
@@ -260,14 +289,14 @@ const handleSubmit = async () => {
             <span>Kembali</span>
           </button>
 
-          <button v-if="currentStep < totalSteps" @click="nextStep" type="button" class="btn btn-primary" :disabled="!canProceedStep1">
-            <span>Selanjutnya</span>
-            <ChevronRight :size="20" />
+          <button v-if="currentStep < totalSteps" @click="nextStep" type="button" class="btn btn-primary" :disabled="!canProceedStep1 || isCheckingDuplicates">
+            <span>{{ isCheckingDuplicates ? 'Memeriksa...' : 'Selanjutnya' }}</span>
+            <ChevronRight v-if="!isCheckingDuplicates" :size="20" />
           </button>
 
-          <button v-if="currentStep === totalSteps" @click="handleSubmit" type="button" class="btn btn-primary" :disabled="!canSubmit">
-            <Check :size="20" />
-            <span>Kirim Pendaftaran</span>
+          <button v-if="currentStep === totalSteps" @click="handleSubmit" type="button" class="btn btn-primary" :disabled="!canSubmit || isCheckingDuplicates">
+            <Check v-if="!isCheckingDuplicates" :size="20" />
+            <span>{{ isCheckingDuplicates ? 'Mengirim...' : 'Kirim Pendaftaran' }}</span>
           </button>
         </div>
 

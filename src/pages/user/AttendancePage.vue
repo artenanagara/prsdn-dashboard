@@ -17,6 +17,10 @@ onMounted(async () => {
   document.title = 'Riwayat Kehadiran - PRSDN Dashboard';
   await checkinStore.loadCheckins();
   await eventStore.loadEvents();
+  
+  // Subscribe to realtime changes
+  checkinStore.subscribeToChanges();
+  eventStore.subscribeToChanges();
 });
 
 const member = computed(() => {

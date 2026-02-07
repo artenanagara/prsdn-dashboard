@@ -64,6 +64,10 @@ onMounted(async () => {
     membersStore.loadMembers(false), // false = exclude admins for user view
     fetchHolidays()
   ]);
+  
+  // Subscribe to realtime changes
+  checkinStore.subscribeToChanges();
+  eventStore.subscribeToChanges();
 });
 
 const fetchHolidays = async () => {

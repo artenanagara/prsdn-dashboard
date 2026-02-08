@@ -6,6 +6,7 @@ import { useUIStore } from '../../stores/ui';
 import {
   Trash2,
   Eye,
+  Edit,
 } from 'lucide-vue-next';
 import { supabase } from '../../lib/supabase';
 import BaseCard from '../../components/BaseCard.vue';

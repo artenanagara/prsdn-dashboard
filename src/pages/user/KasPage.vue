@@ -54,14 +54,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Kas Saya" pageSubtitle="Riwayat pembayaran kas bulanan">
     <div class="user-kas-page">
-      <BaseCard class="page-header-card">
-        <div class="page-header">
-          <h1>Riwayat Kas</h1>
-          <p class="text-secondary">Lihat riwayat pembayaran kas bulanan Anda</p>
-        </div>
-      </BaseCard>
 
       <BaseCard class="mb-6 summary-card">
         <div class="summary">

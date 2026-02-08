@@ -43,7 +43,13 @@ withDefaults(defineProps<Props>(), {
   /* Removed height: 100% to allow "hug content" behavior by default */
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Ensure children don't overflow rounded corners */
+  position: relative;
+  overflow: hidden; /* Back to hidden by default for visual integrity */
+}
+
+/* New class to allow overflow when needed (e.g. for simple selects that don't use teleport) */
+.card.overflow-visible {
+  overflow: visible;
 }
 
 .card.h-full {
@@ -62,6 +68,16 @@ withDefaults(defineProps<Props>(), {
   flex-direction: column;
 }
 
+/* Ensure body respects card radii if it's top or bottom */
+.card-body:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.card-body:last-child {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
 .card-body.scrollable {
   overflow-y: auto; /* Opt-in internal scrolling */
 }
@@ -76,6 +92,8 @@ withDefaults(defineProps<Props>(), {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .card-title {
@@ -89,8 +107,8 @@ withDefaults(defineProps<Props>(), {
   padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--color-border-light);
   background-color: var(--color-bg-secondary);
-  border-bottom-left-radius: var(--radius-xl);
-  border-bottom-right-radius: var(--radius-xl);
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 /* Variants */

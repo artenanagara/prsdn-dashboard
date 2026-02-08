@@ -77,29 +77,23 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
-  min-width: 60px;
   transition: all var(--transition-base);
 }
 
 .countdown-active {
-  background-color: var(--color-success-light);
-  color: var(--color-success);
+  color: #FFFFFF;
 }
 
 .countdown-warning {
-  background-color: var(--color-warning-light);
-  color: var(--color-warning);
+  color: #FFFFFF;
   animation: pulse 1s ease-in-out infinite;
 }
 
 .countdown-expired {
-  background-color: var(--color-danger-light);
-  color: var(--color-danger);
+  color: #FFFFFF;
 }
 
 @keyframes pulse {

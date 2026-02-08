@@ -234,12 +234,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Dashboard Admin" pageSubtitle="Ringkasan data dan statistik">
     <div class="dashboard-page">
-      <div class="page-header">
-        <h1>Dashboard Admin</h1>
-        <p class="text-secondary">Ringkasan data dan statistik</p>
-      </div>
 
       <!-- Stats Cards -->
       <div class="stats-grid">

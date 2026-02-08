@@ -8,6 +8,8 @@ import EmptyState from '../../components/EmptyState.vue';
 import { useFinanceStore } from '../../stores/finance';
 import { useUIStore } from '../../stores/ui';
 import { Plus, Edit, Trash2 } from 'lucide-vue-next';
+import BaseSelect from '../../components/BaseSelect.vue';
+import BaseDateRangePicker from '../../components/BaseDateRangePicker.vue';
 
 const financeStore = useFinanceStore();
 const uiStore = useUIStore();
@@ -21,6 +23,19 @@ onMounted(() => {
 const showModal = ref(false);
 const editingTransaction = ref<any>(null);
 const filterType = ref<'all' | 'income' | 'expense'>('all');
+const filterCategory = ref('all');
+const startDate = ref<string | null>(null);
+const endDate = ref<string | null>(null);
+
+const categoryOptions = [
+  { label: 'Semua Kategori', value: 'all' },
+  { label: 'Kas', value: 'kas' },
+  { label: 'Donasi', value: 'donasi' },
+  { label: 'Operasional', value: 'operasional' },
+  { label: 'Konsumsi', value: 'konsumsi' },
+  { label: 'Acara', value: 'acara' },
+  { label: 'Lainnya', value: 'lainnya' }
+];
 
 const formData = ref<{
   type: 'income' | 'expense';
@@ -39,17 +54,13 @@ const formData = ref<{
 });
 
 const filteredTransactions = computed(() => {
-  const allTransactions = [...financeStore.transactions];
-  
-  if (filterType.value === 'all') {
-    return allTransactions.sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  }
-  
-  return allTransactions
-    .filter(t => t.type === filterType.value)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return financeStore.transactions.filter(t => {
+    const matchesType = filterType.value === 'all' || t.type === filterType.value;
+    const matchesCategory = filterCategory.value === 'all' || t.category === filterCategory.value;
+    const matchesDate = (!startDate.value || t.date >= startDate.value) && 
+                       (!endDate.value || t.date <= endDate.value);
+    return matchesType && matchesCategory && matchesDate;
+  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 });
 
 const openAddModal = (type: 'income' | 'expense') => {
@@ -150,25 +161,8 @@ const formatDate = (dateString: string) => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Transaksi Keuangan" pageSubtitle="Kelola pemasukan dan pengeluaran">
     <div class="finance-page">
-      <div class="page-header">
-        <div>
-          <h1>Buku Kas</h1>
-          <p class="text-secondary">Kelola pemasukan dan pengeluaran</p>
-        </div>
-        <div class="header-actions">
-          <button @click="openAddModal('income')" class="btn" style="background-color: var(--color-success); color: white;">
-            <Plus :size="20" />
-            <span>Tambah Pemasukan</span>
-          </button>
-          <button @click="openAddModal('expense')" class="btn btn-danger">
-            <Plus :size="20" />
-            <span>Tambah Pengeluaran</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Summary Cards -->
       <div class="stats-grid mb-6">
          <CardStat
@@ -188,31 +182,46 @@ const formatDate = (dateString: string) => {
         />
       </div>
 
-      <!-- Filter -->
-      <div class="card card-compact mb-6">
-        <div class="card-body">
-          <div class="filter-tabs">
-            <button
-              @click="filterType = 'all'"
-              :class="['filter-tab', { active: filterType === 'all' }]"
-            >
-              Semua
+      <!-- Filter & Actions Bar -->
+      <div class="controls-bar mb-6">
+        <div class="controls-wrapper">
+          <div class="filters-group">
+            <BaseDateRangePicker 
+              v-model:start="startDate" 
+              v-model:end="endDate" 
+              placeholder="Filter Tanggal"
+            />
+            
+            <BaseSelect 
+              v-model="filterCategory" 
+              :options="categoryOptions"
+              class="filter-select-md"
+            />
+
+            <BaseSelect 
+              v-model="filterType" 
+              :options="[
+                { label: 'Semua Tipe', value: 'all' },
+                { label: 'Pemasukan', value: 'income' },
+                { label: 'Pengeluaran', value: 'expense' }
+              ]"
+              class="filter-select-md"
+            />
+          </div>
+
+          <div class="actions-group">
+            <button @click="openAddModal('income')" class="btn btn-income">
+              <Plus :size="18" />
+              <span>Pemasukan</span>
             </button>
-            <button
-              @click="filterType = 'income'"
-              :class="['filter-tab', { active: filterType === 'income' }]"
-            >
-              Pemasukan
-            </button>
-            <button
-              @click="filterType = 'expense'"
-              :class="['filter-tab', { active: filterType === 'expense' }]"
-            >
-              Pengeluaran
+            <button @click="openAddModal('expense')" class="btn btn-expense">
+              <Plus :size="18" />
+              <span>Pengeluaran</span>
             </button>
           </div>
         </div>
       </div>
+
 
       <!-- Transactions Table -->
       <BaseCard class="table-card">
@@ -361,9 +370,10 @@ const formatDate = (dateString: string) => {
   margin-bottom: var(--space-2);
 }
 
-.header-actions {
-  display: flex;
-  gap: var(--space-3);
+.btn-expense:hover {
+  background-color: #dc2626; /* Slightly darker red */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .stats-grid {
@@ -394,38 +404,10 @@ const formatDate = (dateString: string) => {
   -webkit-overflow-scrolling: touch;
 }
 
-.filter-tabs {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.filter-tab {
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.filter-tab:hover {
-  background-color: var(--color-bg);
-}
-
-.filter-tab.active {
-  background-color: var(--color-primary);
-  color: white;
-}
-
 .action-buttons {
   display: flex;
   gap: var(--space-2);
 }
-
-
 
 .modal-overlay {
   position: fixed;
@@ -435,7 +417,7 @@ const formatDate = (dateString: string) => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center; /* Center vertically */
+  align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: var(--space-6);
@@ -466,23 +448,13 @@ const formatDate = (dateString: string) => {
   display: flex;
   gap: var(--space-4);
   justify-content: flex-end;
-  margin-top: 0; /* Reset since it's now in a flex-container or following body */
+  margin-top: 0;
   padding: var(--space-6);
   border-top: 1px solid var(--color-border-light);
   flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .header-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
   .form-row {
     grid-template-columns: 1fr;
   }

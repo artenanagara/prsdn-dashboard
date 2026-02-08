@@ -10,6 +10,7 @@ import {
 import { supabase } from '../../lib/supabase';
 import BaseCard from '../../components/BaseCard.vue';
 import BaseDatePicker from '../../components/BaseDatePicker.vue';
+import BaseSelect from '../../components/BaseSelect.vue';
 
 const membersStore = useMembersStore();
 const uiStore = useUIStore();
@@ -33,6 +34,28 @@ const formData = ref({
   educationStatus: 'not_school' as 'school' | 'not_school',
   educationLevel: undefined as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined
 });
+
+const rtOptions = [
+  { label: 'Semua RT', value: 'all' },
+  { label: 'RT 01', value: '01' },
+  { label: 'RT 02', value: '02' },
+  { label: 'RT 03', value: '03' },
+  { label: 'RT 04', value: '04' }
+];
+
+const rtOptionsOnly = rtOptions.filter(o => o.value !== 'all');
+
+const eduStatusOptions = [
+  { label: 'Tidak Sekolah', value: 'not_school' },
+  { label: 'Masih Sekolah', value: 'school' }
+];
+
+const eduLevelOptions = [
+  { label: 'SD', value: 'SD' },
+  { label: 'SMP', value: 'SMP' },
+  { label: 'SMA/SMK', value: 'SMA/SMK' },
+  { label: 'Perguruan Tinggi', value: 'College' }
+];
 
 const filteredMembers = computed(() => {
   let result = [...membersStore.members];
@@ -150,39 +173,35 @@ const formatDate = (date: string | null) => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Daftar Anggota" pageSubtitle="Kelola data anggota PRSDN">
     <div class="members-page">
-      <BaseCard class="page-header-card">
-        <div class="page-header">
-          <div>
-            <h1>Manajemen Anggota</h1>
-            <p class="text-secondary">Kelola data anggota</p>
-          </div>
-        </div>
-      </BaseCard>
 
-      <!-- Filters -->
-      <BaseCard class="filters-card">
-        <div class="filters">
-          <div class="form-group" style="flex: 1; margin: 0;">
+      <!-- Filter & Actions Bar -->
+      <div class="controls-bar">
+        <div class="controls-wrapper">
+          <div class="filters-group">
             <input
               v-model="searchQuery"
               type="text"
               class="form-input"
               placeholder="Cari nama, telepon, atau pekerjaan..."
             >
+            <BaseSelect 
+              v-model="selectedRT" 
+              :options="rtOptions"
+              placeholder="Filter RT"
+              class="filter-select-sm"
+            />
           </div>
-          <div class="form-group" style="margin: 0;">
-            <select v-model="selectedRT" class="form-select">
-              <option value="all">Semua RT</option>
-              <option value="01">RT 01</option>
-              <option value="02">RT 02</option>
-              <option value="03">RT 03</option>
-              <option value="04">RT 04</option>
-            </select>
+
+          <div class="actions-group">
+            <button @click="showModal = true; editingMember = null; resetForm()" class="btn btn-primary">
+              <Plus :size="18" />
+              <span>Tambah Anggota</span>
+            </button>
           </div>
         </div>
-      </BaseCard>
+      </div>
 
       <!-- Members Table -->
       <BaseCard class="members-card">
@@ -278,12 +297,10 @@ const formatDate = (date: string | null) => {
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">RT *</label>
-                  <select v-model="formData.rt" class="form-select" required>
-                    <option value="01">RT 01</option>
-                    <option value="02">RT 02</option>
-                    <option value="03">RT 03</option>
-                    <option value="04">RT 04</option>
-                  </select>
+                  <BaseSelect 
+                    v-model="formData.rt" 
+                    :options="rtOptionsOnly" 
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label">No. HP *</label>
@@ -303,20 +320,18 @@ const formatDate = (date: string | null) => {
 
               <div class="form-group">
                 <label class="form-label">Status Pendidikan *</label>
-                <select v-model="formData.educationStatus" class="form-select" required>
-                  <option value="not_school">Tidak Sekolah</option>
-                  <option value="school">Masih Sekolah</option>
-                </select>
+                <BaseSelect 
+                  v-model="formData.educationStatus" 
+                  :options="eduStatusOptions" 
+                />
               </div>
 
               <div v-if="formData.educationStatus === 'school'" class="form-group">
                 <label class="form-label">Jenjang Pendidikan *</label>
-                <select v-model="formData.educationLevel" class="form-select" required>
-                  <option value="SD">SD</option>
-                  <option value="SMP">SMP</option>
-                  <option value="SMA/SMK">SMA/SMK</option>
-                  <option value="College">Perguruan Tinggi</option>
-                </select>
+                <BaseSelect 
+                  v-model="formData.educationLevel" 
+                  :options="eduLevelOptions" 
+                />
               </div>
             </form>
           </div>

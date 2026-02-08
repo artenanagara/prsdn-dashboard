@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import AppShell from '../../components/AppShell.vue';
-import CardStat from '../../components/CardStat.vue';
 import { useKasStore } from '../../stores/kas';
 import { useMembersStore } from '../../stores/members';
 import { useFinanceStore } from '../../stores/finance';
 import { useUIStore } from '../../stores/ui';
-import { Save } from 'lucide-vue-next';
+import { Save, ChevronRight } from 'lucide-vue-next';
+import BaseSelect from '../../components/BaseSelect.vue';
 
 const kasStore = useKasStore();
 const membersStore = useMembersStore();
@@ -28,6 +28,16 @@ const years = computed(() => {
   }
   return yearList;
 });
+
+const yearOptions = computed(() => years.value.map(y => ({ label: String(y), value: y })));
+
+const rtOptions = [
+  { label: 'Semua RT', value: 'all' },
+  { label: 'RT 01', value: '01' },
+  { label: 'RT 02', value: '02' },
+  { label: 'RT 03', value: '03' },
+  { label: 'RT 04', value: '04' }
+];
 
 const months = [
   { num: 1, name: 'Januari' },
@@ -159,10 +169,6 @@ const currentMonthSummary = computed(() => {
   };
 });
 
-const kasBalance = computed(() => {
-  const kasTransactions = financeStore.transactions.filter(t => t.category === 'kas');
-  return kasTransactions.reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
-});
 
 const selectMonth = (monthNum: number) => {
   selectedMonth.value = monthNum;
@@ -202,7 +208,6 @@ onMounted(async () => {
 
 import BaseCard from '../../components/BaseCard.vue';
 import EmptyState from '../../components/EmptyState.vue';
-import { onMounted } from 'vue';
 
 const saveMonthPayments = async () => {
   if (!selectedMonthKey.value) return;
@@ -252,113 +257,96 @@ const formatCurrency = (amount: number) => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Kas Online" pageSubtitle="Kelola pembayaran kas bulanan">
     <div class="kas-page">
-      <div class="page-header">
-        <div>
-          <h1>Kas Online</h1>
-          <p class="text-secondary">Kelola iuran bulanan anggota</p>
-        </div>
-      </div>
 
-      <!-- Summary Cards -->
-      <div class="stats-grid mb-6">
-        <CardStat
-          title="Saldo Kas (Total)"
-          :value="formatCurrency(kasBalance)"
-          variant="primary"
-        />
-        <CardStat
-          title="Status Pembayaran (Bulan Ini)"
-          :value="`${kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).paidCount} / ${kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).total}`"
-          variant="info"
-        />
-        <CardStat
-          title="Uang Masuk (Bulan Ini)"
-          :value="formatCurrency(kasStore.getMonthSummary(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0')).totalCollected)"
-          variant="success"
-        />
-      </div>
 
-      <!-- Year Tabs -->
-      <BaseCard class="mb-4 year-tabs-card card-compact">
-        <div class="year-tabs">
-          <button
-            v-for="year in years"
-            :key="year"
-            @click="selectedYear = year; selectedMonth = null"
-            :class="['year-tab', { active: selectedYear === year }]"
-          >
-            {{ year }}
-          </button>
+      <!-- Year Selector -->
+      <BaseCard class="mb-4 year-selector-card card-compact">
+        <div class="year-selector">
+          <label class="form-label">Pilih Tahun:</label>
+          <BaseSelect 
+            v-model="selectedYear" 
+            :options="yearOptions" 
+            @update:modelValue="selectedMonth = null"
+          />
         </div>
       </BaseCard>
 
-      <div v-if="!selectedMonth" class="months-grid">
+      <div v-if="!selectedMonth" class="months-list">
         <BaseCard
           v-for="monthSummary in monthSummaries"
           :key="monthSummary.num"
           @click="selectMonth(monthSummary.num)"
-          class="month-card"
+          class="month-row-card"
+          no-padding
         >
-          <template #header>
-            <div class="flex justify-between items-center w-full">
-              <h3 class="font-bold text-lg">{{ monthSummary.name }}</h3>
-              <span class="badge badge-secondary">{{ selectedYear }}</span>
-            </div>
-          </template>
-          
-          <div class="month-card-content">
-            <div class="stats-mini-grid">
-              <div class="stat-mini">
-                <span class="label">Terbayar</span>
-                <span class="value">{{ monthSummary.paidCount }} / {{ monthSummary.total }}</span>
+          <div class="month-card-stacked">
+            <!-- Top Section: Title & Amount -->
+            <div class="month-card-top">
+              <div class="month-title-row">
+                <h3 class="month-name">{{ monthSummary.name }} <span class="month-year">{{ selectedYear }}</span></h3>
               </div>
-              <div class="stat-mini">
-                <span class="label">Total</span>
-                <span class="value text-success font-bold">{{ formatCurrency(monthSummary.totalCollected) }}</span>
+              <div class="month-amount">
+                <span class="label">Terkumpul</span>
+                <span class="value text-success">{{ formatCurrency(monthSummary.totalCollected) }}</span>
+              </div>
+            </div>
+
+            <div class="month-card-divider"></div>
+
+            <!-- Bottom Section: Stats & Arrow -->
+            <div class="month-card-bottom">
+              <div class="month-stats-simple">
+                 {{ monthSummary.paidCount }} / {{ monthSummary.total }} Anggota Terbayar
+              </div>
+              <div class="month-arrow">
+                <ChevronRight :size="18" />
               </div>
             </div>
           </div>
         </BaseCard>
       </div>
 
-      <!-- Month Detail -->
       <div v-else class="flex flex-col flex-1 min-h-0">
-        <BaseCard class="month-detail-card" no-padding>
-          <div class="table-header-row">
-            <div class="table-header-info">
-              <h2>{{ selectedMonth ? months[selectedMonth - 1]?.name : '' }} {{ selectedYear }}</h2>
-              <p class="text-secondary text-sm">
-                {{ currentMonthSummary.paidCount }} dari {{ currentMonthSummary.total }} anggota sudah membayar
-              </p>
-            </div>
-            <div class="table-header-filters">
+        <!-- Month Detail Header -->
+        <div class="month-detail-header mb-6">
+          <div class="header-info">
+            <h2 class="text-2xl font-bold mb-1">{{ selectedMonth ? months[selectedMonth - 1]?.name : '' }} {{ selectedYear }}</h2>
+            <p class="text-secondary">
+              {{ currentMonthSummary.paidCount }} dari {{ currentMonthSummary.total }} anggota sudah membayar (Terkumpul: {{ formatCurrency(currentMonthSummary.totalCollected) }})
+            </p>
+          </div>
+        </div>
+
+        <!-- Filter & Actions Bar -->
+        <div class="controls-bar mb-6">
+          <div class="controls-wrapper">
+            <div class="filters-group">
               <input
                 v-model="searchQuery"
                 type="text"
                 class="form-input"
-                placeholder="Cari nama..."
+                placeholder="Cari nama anggota..."
               >
-              <select v-model="filterRT" class="form-select">
-                <option value="all">Semua RT</option>
-                <option value="01">RT 01</option>
-                <option value="02">RT 02</option>
-                <option value="03">RT 03</option>
-                <option value="04">RT 04</option>
-              </select>
+              <BaseSelect 
+                v-model="filterRT" 
+                :options="rtOptions"
+                placeholder="Pilih RT"
+                class="filter-select-sm"
+              />
             </div>
-            <div class="table-header-actions">
+            <div class="actions-group">
               <button @click="selectedMonth = null" class="btn btn-secondary">
                 Kembali
               </button>
               <button @click="saveMonthPayments" class="btn btn-primary">
-                <Save :size="20" />
-                <span>Simpan</span>
+                <Save :size="18" />
+                <span>Simpan Perubahan</span>
               </button>
             </div>
           </div>
-        </BaseCard>
+        </div>
         
         <BaseCard class="table-card" no-padding>
           <div class="table-container">
@@ -494,86 +482,131 @@ const formatCurrency = (amount: number) => {
   overflow-x: visible;
 }
 
-.year-tabs-card {
+.year-selector-card {
   height: auto !important;
   flex-shrink: 0;
   max-width: 100%;
   overflow-x: visible;
 }
 
-.year-tabs {
+.year-selector {
   display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
 }
 
-.year-tab {
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
+.year-selector .form-label {
+  margin: 0;
   font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.year-selector .form-select {
+  min-width: 150px;
+}
+
+.months-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  max-width: 100%;
+}
+
+.month-row-card {
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.year-tab:hover {
-  background-color: var(--color-bg);
+.month-row-card:hover {
+  transform: translateX(4px);
+  border-color: var(--color-primary-light);
+  background-color: var(--color-bg-secondary);
 }
 
-.year-tab.active {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.months-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-6);
-  padding-bottom: var(--space-4);
-  max-width: 100%;
-  overflow-x: visible;
-}
-
-.month-card {
-  cursor: pointer;
-}
-
-.month-card-content {
+.month-card-stacked {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
-.stats-mini-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border-light);
+.month-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
 }
 
-.stat-mini {
+.month-card-divider {
+  height: 1px;
+  background-color: var(--color-border-light);
+  margin: 0 var(--space-6);
+}
+
+.month-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.month-name {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+}
+
+.month-year {
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  margin-left: var(--space-2);
+}
+
+.month-amount {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 2px;
 }
 
-.stat-mini .label {
-  font-size: var(--text-xs);
+.month-amount .label {
+  font-size: 10px;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.stat-mini .value {
+.month-amount .value {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.month-stats-simple {
   font-size: var(--text-sm);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
+}
+
+.month-arrow {
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  transition: all var(--transition-base);
+}
+
+.month-row-card:hover .month-arrow {
+  opacity: 1;
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+.month-row-card:hover .month-arrow {
+  opacity: 1;
+  color: var(--color-primary);
 }
 
 .month-detail-header-card {
-  flex-shrink: 0; /* Prevent header stretching */
+  flex-shrink: 0;
 }
 
 /* Compact table header - vertical layout */
@@ -583,8 +616,7 @@ const formatCurrency = (amount: number) => {
   gap: var(--space-3);
   padding: var(--space-4);
   max-width: 100%;
-  overflow-x: visible;
-  padding-bottom: var(--space-3);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-bg-elevated);
 }
@@ -634,6 +666,20 @@ const formatCurrency = (amount: number) => {
 }
 
 @media (max-width: 768px) {
+  .month-row-content {
+    flex-direction: row; /* Keep horizontal but wrap if needed */
+    align-items: center;
+    padding: var(--space-4);
+  }
+  
+  .month-amount-info {
+    text-align: right;
+  }
+  
+  .month-arrow {
+    display: none;
+  }
+
   .table-header-filters {
     flex-direction: row;
     align-items: stretch;

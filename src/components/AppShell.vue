@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useMembersStore } from '../stores/members';
 import {
   LayoutDashboard,
   Users,
@@ -10,11 +11,27 @@ import {
   X,
   ClipboardCheck
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+// Props for page title and subtitle
+const props = defineProps<{
+  pageTitle?: string;
+  pageSubtitle?: string;
+}>();
 
 const authStore = useAuthStore();
+const membersStore = useMembersStore();
 const router = useRouter();
 const isSidebarOpen = ref(window.innerWidth >= 1024);
+
+// Get current user's full name from members store
+const currentUserFullName = computed(() => {
+  if (authStore.currentUser?.memberId) {
+    const member = membersStore.getMemberById(authStore.currentUser.memberId);
+    return member?.fullName || authStore.currentUser.username;
+  }
+  return authStore.currentUser?.username || 'User';
+});
 
 import { onMounted } from 'vue';
 
@@ -153,17 +170,23 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
     <div class="main-content">
       <!-- Topbar -->
       <header class="topbar">
-        <button @click="toggleSidebar" class="btn btn-secondary btn-sm" v-if="!isSidebarOpen">
-          <Menu :size="20" />
-        </button>
-        <!-- Spacer if button is hidden to keep layout or just flex start -->
-        <div v-else class="w-8"></div> 
+        <div class="topbar-left">
+          <button @click="toggleSidebar" class="btn btn-secondary btn-sm" v-if="!isSidebarOpen">
+            <Menu :size="20" />
+          </button>
+          
+          <div class="topbar-title" v-if="pageTitle">
+            <h2 class="topbar-page-title">{{ pageTitle }}</h2>
+            <p class="topbar-page-subtitle" v-if="pageSubtitle">{{ pageSubtitle }}</p>
+          </div>
+        </div>
 
         <div class="topbar-user">
-          <span class="topbar-username">{{ authStore.currentUser?.username }}</span>
-          <span class="badge" :class="authStore.isAdmin ? 'badge-info' : 'badge-success'">
-            {{ authStore.isAdmin ? 'Admin' : 'User' }}
-          </span>
+          <div class="topbar-user-info">
+            <span class="topbar-fullname">{{ currentUserFullName }}</span>
+            <span class="topbar-username">@{{ authStore.currentUser?.username }}</span>
+          </div>
+          <img src="/default-avatar.png" alt="Profile" class="topbar-avatar" />
         </div>
       </header>
 
@@ -203,7 +226,8 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 .sidebar-header {
-  padding: var(--space-6);
+  padding: 0 var(--space-6);
+  height: var(--topbar-height);
   border-bottom: 1px solid var(--color-border-light);
   display: flex;
   justify-content: space-between;
@@ -343,18 +367,82 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   position: sticky;
   top: 0;
   z-index: 90;
+  gap: var(--space-4);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.topbar-page-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-page-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-user {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.topbar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topbar-fullname {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-username {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right; 
 }
 
 .page-content {
@@ -382,6 +470,22 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
   .page-content {
     padding: var(--space-3); /* Reduced padding for mobile */
+  }
+
+  .topbar {
+    padding: 0 var(--space-3);
+  }
+
+  .topbar-page-title {
+    font-size: var(--text-base);
+  }
+
+  .topbar-page-subtitle {
+    font-size: var(--text-xs);
+  }
+
+  .topbar-user-info {
+    display: none; /* Hide user info on mobile to save space */
   }
 }
 </style>

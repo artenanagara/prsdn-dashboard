@@ -79,6 +79,7 @@ export interface AttendanceEvent {
   id: string;
   title: string;
   description?: string;
+  notes?: string;
   date: string; // YYYY-MM-DD
   startTime?: string; // HH:mm
   endTime?: string; // HH:mm

@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import AppShell from '../../components/AppShell.vue';
 import EmptyState from '../../components/EmptyState.vue';
+import BaseSelect from '../../components/BaseSelect.vue';
 import { useApplicationsStore } from '../../stores/applications';
 import { useAuthStore } from '../../stores/auth';
 import { useUIStore } from '../../stores/ui';
-import { CheckCircle, XCircle } from 'lucide-vue-next';
+import { CheckCircle, XCircle, Search } from 'lucide-vue-next';
 
 const applicationsStore = useApplicationsStore();
 const authStore = useAuthStore();
 const uiStore = useUIStore();
 
-const applications = computed(() => applicationsStore.applications);
+const searchQuery = ref('');
+const filterStatus = ref('all');
+
+const statusOptions = [
+  { label: 'Semua Status', value: 'all' },
+  { label: 'Menunggu', value: 'pending' },
+  { label: 'Disetujui', value: 'approved' },
+  { label: 'Ditolak', value: 'rejected' }
+];
+
+const filteredApplications = computed(() => {
+  return applicationsStore.applications.filter(app => {
+    const matchesSearch = app.step1Data.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                         app.username.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesStatus = filterStatus.value === 'all' || app.status === filterStatus.value;
+    return matchesSearch && matchesStatus;
+  });
+});
 
 // Load applications on mount
 onMounted(() => {
@@ -82,16 +100,28 @@ const getStatusText = (status: string) => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Permohonan Akun" pageSubtitle="Tinjau dan kelola permohonan akun baru">
     <div class="applications-page">
-      <BaseCard class="page-header-card">
-        <div class="page-header">
-          <div>
-            <h1>Permohonan Akun</h1>
-            <p class="text-secondary">Kelola permohonan pendaftaran anggota baru</p>
+      
+      <!-- Filter & Actions Bar -->
+      <div class="controls-bar">
+        <div class="controls-wrapper">
+          <div class="filters-group">
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="form-input"
+              placeholder="Cari nama atau username..."
+            >
+            <BaseSelect 
+              v-model="filterStatus" 
+              :options="statusOptions"
+              placeholder="Filter Status"
+              class="filter-select-md"
+            />
           </div>
         </div>
-      </BaseCard>
+      </div>
 
       <BaseCard class="table-card">
         <div class="table-container">
@@ -117,16 +147,16 @@ const getStatusText = (status: string) => {
                   </div>
                 </td>
               </tr>
-              <tr v-else-if="applications.length === 0">
+              <tr v-else-if="filteredApplications.length === 0">
                 <td colspan="7" class="empty-cell">
                   <EmptyState
-                    icon="inbox"
-                    title="Tidak ada permohonan"
-                    message="Belum ada permohonan pendaftaran anggota baru saat ini."
+                    :icon="searchQuery || filterStatus !== 'all' ? 'search' : 'inbox'"
+                    title="Tidak ada data"
+                    :message="searchQuery || filterStatus !== 'all' ? 'Tidak ada permohonan yang sesuai dengan filter.' : 'Belum ada permohonan pendaftaran anggota baru saat ini.'"
                   />
                 </td>
               </tr>
-              <tr v-for="app in applications" :key="app.id">
+              <tr v-for="app in filteredApplications" :key="app.id">
                 <td class="font-medium capitalize">{{ app.step1Data.fullName }}</td>
                 <td><span class="badge badge-secondary">RT {{ app.step1Data.rt }}</span></td>
                 <td>{{ app.step1Data.phone }}</td>

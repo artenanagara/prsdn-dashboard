@@ -4,12 +4,11 @@ import AppShell from '../../components/AppShell.vue';
 import BaseCard from '../../components/BaseCard.vue';
 import EmptyState from '../../components/EmptyState.vue';
 import CountdownTimer from '../../components/CountdownTimer.vue';
-import TokenInput from '../../components/TokenInput.vue';
 import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useAuthStore } from '../../stores/auth';
 import { useMembersStore } from '../../stores/members';
-import { CheckCircle } from 'lucide-vue-next';
+// Stores
 
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
@@ -117,99 +116,70 @@ const formatDate = (dateString: string | number) => {
   });
 };
 
-const formatTime = (timeString?: string) => {
-  if (!timeString) return '';
-  return timeString;
-};
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Check-in Absensi" pageSubtitle="Lakukan absensi dengan token">
     <div class="checkin-page">
-      <BaseCard class="page-header-card">
-        <div class="page-header">
-          <h1>Absensi</h1>
-          <p class="text-secondary">Check-in event dan riwayat kehadiran</p>
-        </div>
-      </BaseCard>
 
       <!-- Active Event Card -->
-      <BaseCard v-if="activeEvent" class="mb-4 active-event-card">
-        <div class="active-event-layout">
-          <!-- Left Column: Details -->
-          <div class="event-details-col">
-            <div class="event-header">
-              <div>
-                <h2>{{ activeEvent.title }}</h2>
-                <span class="badge badge-success mt-2 md:mt-0 md:ml-0 inline-block md:hidden">Active</span>
-              </div>
-              <span class="badge badge-success hidden md:inline-block">Active</span>
-            </div>
-
-            <p v-if="activeEvent.description" class="text-secondary mb-4">{{ activeEvent.description }}</p>
-
-            <div class="event-meta">
-              <span>📅 {{ formatDate(activeEvent.date) }}</span>
-              <span v-if="activeEvent.startTime">🕐 {{ formatTime(activeEvent.startTime) }} - {{ formatTime(activeEvent.endTime) }} WIB</span>
-            </div>
+      <div v-if="activeEvent" class="card mb-6 active-event-card">
+        <div class="card-body">
+          <div class="active-event-header">
+            <h3>Event Aktif</h3>
           </div>
-
-          <div class="divider"></div>
-
-          <!-- Right Column: Action -->
-          <div class="checkin-action-col">
-            <!-- Already Checked In -->
-            <div v-if="alreadyCheckedIn" class="checkin-success">
-              <CheckCircle :size="48" />
-              <h3>Anda sudah check-in</h3>
-              <p class="text-secondary">Terima kasih atas kehadiran Anda!</p>
+          
+          
+          <!-- Event Card Content -->
+          <div class="event-card-layout">
+            <!-- Left: Event Details -->
+            <div class="event-details-col">
+              <div class="event-detail-header">
+                <h2>{{ activeEvent.title }}</h2>
+                <div class="event-meta">
+                  <span>{{ formatDate(activeEvent.date) }}</span>
+                  <span v-if="activeEvent.startTime">{{ activeEvent.startTime.substring(0, 5) }} - {{ activeEvent.endTime ? activeEvent.endTime.substring(0, 5) : 'Selesai' }} WIB</span>
+                </div>
+              </div>
+              <p v-if="activeEvent.description || activeEvent.notes" class="event-description">{{ activeEvent.description || activeEvent.notes }}</p>
             </div>
 
-            <!-- Check-in Form -->
-            <div v-else class="checkin-form">
-              <div v-if="hasToken && !isTokenExpired" class="token-status">
-                <label>Token berlaku hingga:</label>
-                <CountdownTimer :expiresAt="activeEvent.tokenExpiresAt" />
+            <!-- Right: Input Form -->
+            <div class="event-form-col">
+              <div v-if="alreadyCheckedIn" class="checkin-success">
+                <div class="success-icon">✓</div>
+                <h3>Kamu sudah absen!</h3>
+                <p class="text-secondary">Terima kasih sudah hadir.</p>
               </div>
-
-              <div v-else-if="isTokenExpired" class="token-expired">
-                <p class="text-danger">Token sudah kadaluarsa. Silakan tunggu token baru dari admin.</p>
-              </div>
-
-              <div v-else class="token-waiting">
-                <p class="text-secondary">Menunggu token dari admin...</p>
-              </div>
-
-              <div v-if="hasToken && !isTokenExpired" class="token-input-section">
-                <label class="form-label">Masukkan Token:</label>
-                <TokenInput
+              <div v-else-if="hasToken" class="input-button-stack">
+                <input 
                   v-model="tokenValue"
-                  :disabled="isSubmitting"
-                  @submit="handleSubmit"
-                />
-
+                  type="text" 
+                  class="form-input token-input-field"
+                  placeholder="Masukkan kode token"
+                  maxlength="6"
+                  :disabled="isSubmitting || isTokenExpired"
+                >
                 <button
                   @click="handleSubmit"
-                  :disabled="!canSubmit"
-                  class="btn btn-primary btn-lg"
+                  :disabled="isSubmitting || isTokenExpired"
+                  class="btn btn-primary btn-countdown"
                 >
-                  {{ isSubmitting ? 'Memproses...' : 'Check In' }}
+                  <span v-if="isTokenExpired">Waktu Habis</span>
+                  <span v-else-if="isSubmitting">Memproses...</span>
+                  <span v-else-if="tokenValue">Check In</span>
+                  <CountdownTimer v-else :expiresAt="activeEvent.tokenExpiresAt" :compact="true" />
                 </button>
               </div>
-
-              <!-- Success Message -->
-              <div v-if="successMessage" class="alert alert-success">
-                {{ successMessage }}
+              <div v-else class="waiting-state-text">
+                <p class="text-secondary">Menunggu token dari admin/petugas...</p>
               </div>
-
-              <!-- Error Message -->
-              <div v-if="errorMessage" class="alert alert-danger">
-                {{ errorMessage }}
-              </div>
+              <p v-if="errorMessage" class="text-error mt-2 text-sm">{{ errorMessage }}</p>
+              <p v-if="successMessage" class="text-success mt-2 text-sm">{{ successMessage }}</p>
             </div>
           </div>
         </div>
-      </BaseCard>
+      </div>
 
       <!-- No Active Event -->
       <BaseCard v-else class="mb-4">
@@ -261,12 +231,10 @@ const formatTime = (timeString?: string) => {
 
 <style scoped>
 .checkin-page {
-  max-width: 1000px;
-  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  margin: 0 auto;
-  min-height: 0;
+  margin: 0;
 }
 
 .page-header-card {
@@ -282,37 +250,41 @@ const formatTime = (timeString?: string) => {
   margin-bottom: var(--space-1);
 }
 
-/* Active Event Layout */
-.active-event-layout {
+/* Active Event Card - Redesigned Layout */
+
+.active-event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.active-event-header h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+/* Active Event Card - Two Column Layout */
+
+.event-card-layout {
   display: flex;
   gap: var(--space-8);
   align-items: stretch;
+  min-height: 200px;
 }
 
 .event-details-col {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: var(--space-4);
 }
 
-.checkin-action-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.event-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-4);
-}
-
-.event-header h2 {
-  margin-bottom: 0;
-  line-height: 1.2;
+.event-detail-header h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-3);
 }
 
 .event-meta {
@@ -321,15 +293,79 @@ const formatTime = (timeString?: string) => {
   gap: var(--space-4);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
-/* Vertical Divider for Desktop, Horizontal for Mobile */
-.divider {
-  width: 1px;
-  background-color: var(--color-border-light);
+.event-description {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-form-col {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: flex-end;
+}
+
+.input-button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.token-input-field {
+  width: 100%;
+  text-align: left;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: var(--text-base);
+}
+
+.btn-countdown {
+  width: 100%;
+  white-space: nowrap;
+  padding: var(--space-3) var(--space-6);
+}
+
+.token-expired-text {
+  color: var(--color-text-secondary);
+}
+
+.token-expired-text p {
   margin: 0;
-  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.waiting-state-text {
+  color: var(--color-text-secondary);
+}
+
+.waiting-state-text p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 768px) {
+  .event-card-layout {
+    flex-direction: column;
+  }
+
+  .event-form-col {
+    flex: 1;
+    width: 100%;
+  }
 }
 
 .checkin-success {
@@ -337,55 +373,32 @@ const formatTime = (timeString?: string) => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-4);
   text-align: center;
-  color: var(--color-success);
 }
 
 .checkin-success h3 {
   color: var(--color-text-primary);
   margin: 0;
+  font-size: var(--text-lg);
 }
 
-.checkin-form {
+.success-icon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-success);
+  color: white;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.token-status {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-md);
+  justify-content: center;
+  font-size: 24px;
 }
 
-.token-status label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-}
-
-.token-expired,
-.token-waiting {
+.waiting-state {
   padding: var(--space-4);
   background-color: var(--color-bg);
   border-radius: var(--radius-md);
   text-align: center;
-}
-
-.token-input-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.btn-lg {
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--text-base);
-  font-weight: var(--font-weight-semibold);
 }
 
 .alert {
@@ -407,31 +420,50 @@ const formatTime = (timeString?: string) => {
   border: 1px solid var(--color-danger);
 }
 
-.active-event-card {
-  flex-shrink: 0;
-  height: auto !important;
+@media (max-width: 768px) {
+  .event-top-section {
+    flex-direction: column;
+  }
+
+  .countdown-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .input-button-row {
+    flex-direction: column;
+  }
+
+  .input-button-row .btn {
+    width: 100%;
+  }
+}
+
+/* TokenInput styling to match HomePage */
+.input-button-row :deep(.token-input),
+.input-button-group :deep(.token-input) {
+  flex: 1;
+  text-align: left;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: var(--text-base);
+}
+
+.token-input-short :deep(.token-input) {
+  width: 200px;
 }
 
 .history-card {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  margin-top: var(--space-6);
 }
 
 .history-card :deep(.card-body) {
   padding: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
 }
 
 .table-scroll-container {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -452,20 +484,8 @@ th {
 }
 
 @media (max-width: 768px) {
-  .active-event-layout {
-    flex-direction: column;
-    gap: var(--space-6);
-  }
-
-  .divider {
-    width: 100%;
-    height: 1px;
-    margin: 0;
-  }
-  
-  .event-header {
-    flex-direction: column;
-    gap: var(--space-2);
+  .active-event-content {
+    gap: var(--space-4);
   }
 
   .event-meta {

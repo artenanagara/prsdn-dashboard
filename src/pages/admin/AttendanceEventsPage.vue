@@ -11,6 +11,7 @@ import { useAuthStore } from '../../stores/auth';
 import { useUIStore } from '../../stores/ui';
 import { Plus, Play, Square, RefreshCw, Trash2, Users } from 'lucide-vue-next';
 import TimePicker from '../../components/TimePicker.vue';
+import BaseSelect from '../../components/BaseSelect.vue';
 
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
@@ -31,6 +32,14 @@ const formData = ref({
   startTime: '',
   endTime: ''
 });
+
+const rtOptions = [
+  { label: 'Semua RT', value: 'all' },
+  { label: 'RT 01', value: '01' },
+  { label: 'RT 02', value: '02' },
+  { label: 'RT 03', value: '03' },
+  { label: 'RT 04', value: '04' }
+];
 
 onMounted(async () => {
   document.title = 'Absensi - PRSDN Admin';
@@ -185,17 +194,20 @@ const formatDateTime = (timestamp: number) => {
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Kelola Absensi" pageSubtitle="Buat dan kelola event absensi">
     <div class="attendance-events-page">
-      <div class="page-header">
-        <div>
-          <h1>Absensi</h1>
-          <p class="text-secondary">Kelola event dan check-in anggota</p>
+      <div class="controls-bar">
+        <div class="controls-wrapper">
+          <div class="filters-group">
+            <h3 class="font-bold text-lg">Semua Event</h3>
+          </div>
+          <div class="actions-group">
+            <button @click="showCreateModal = true" class="btn btn-primary">
+              <Plus :size="18" />
+              <span>Buat Event</span>
+            </button>
+          </div>
         </div>
-        <button @click="showCreateModal = true" class="btn btn-primary">
-          <Plus :size="20" />
-          <span>Buat Event</span>
-        </button>
       </div>
 
       <!-- Active Event Section -->
@@ -249,10 +261,7 @@ const formatDateTime = (timestamp: number) => {
       </div>
 
       <!-- Events List -->
-      <BaseCard class="events-card">
-        <div class="card-header">
-          <h3>Semua Event</h3>
-        </div>
+      <BaseCard class="events-card" no-padding>
         <div class="table-container">
           <div class="table-scroll-container">
             <table>
@@ -376,21 +385,23 @@ const formatDateTime = (timestamp: number) => {
               </div>
             </div>
 
-            <div class="filters mb-4">
-              <input
-                v-model="searchQuery"
-                type="text"
-                class="form-input"
-                placeholder="Cari nama anggota..."
-                style="max-width: 300px;"
-              />
-              <select v-model="filterRT" class="form-select" style="max-width: 150px;">
-                <option value="all">Semua RT</option>
-                <option value="01">RT 01</option>
-                <option value="02">RT 02</option>
-                <option value="03">RT 03</option>
-                <option value="04">RT 04</option>
-              </select>
+            <div class="controls-bar mb-4">
+              <div class="controls-wrapper">
+                <div class="filters-group">
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    class="form-input"
+                    placeholder="Cari nama anggota..."
+                  />
+                  <BaseSelect 
+                    v-model="filterRT" 
+                    :options="rtOptions"
+                    placeholder="Filter RT"
+                    class="filter-select-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <div class="table-container">

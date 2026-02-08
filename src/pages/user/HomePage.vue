@@ -10,6 +10,7 @@ import { useKasStore } from '../../stores/kas';
 import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useUIStore } from '../../stores/ui';
+import { useFinanceStore } from '../../stores/finance';
 
 const authStore = useAuthStore();
 const membersStore = useMembersStore();
@@ -17,6 +18,7 @@ const kasStore = useKasStore();
 const eventStore = useAttendanceEventStore();
 const checkinStore = useCheckinStore();
 const uiStore = useUIStore();
+const financeStore = useFinanceStore();
 
 const tokenInput = ref('');
 const isSubmitting = ref(false);
@@ -68,6 +70,10 @@ onMounted(async () => {
   // Subscribe to realtime changes
   checkinStore.subscribeToChanges();
   eventStore.subscribeToChanges();
+  
+  // Load finance data
+  await financeStore.loadTransactions();
+  financeStore.subscribeToChanges();
 });
 
 const fetchHolidays = async () => {
@@ -216,15 +222,152 @@ const handleCheckin = async () => {
     }
     isSubmitting.value = false;
 };
+
+// Finance Chart Data - All Transactions
+const financeChartData = computed(() => {
+  const months = [];
+  const today = new Date();
+  
+  // Get last 6 months
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const monthLabel = date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+    
+    // Get start and end of month
+    const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+    const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    
+    // Filter transactions for this month
+    const monthTransactions = financeStore.transactions.filter(t => {
+      const transDate = new Date(t.date);
+      return transDate >= monthStart && transDate <= monthEnd;
+    });
+    
+    // Calculate income and expense for the month
+    const income = monthTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const expense = monthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    months.push({
+      month: monthKey,
+      monthLabel,
+      income,
+      expense,
+      balance: income - expense
+    });
+  }
+  
+  return months;
+});
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+// Dual-Line Chart SVG Logic
+const financeChartPoints = computed(() => {
+  if (financeChartData.value.length === 0) return { income: [], expense: [] };
+  
+  const width = 600;
+  const height = 160;
+  const padding = 30;
+  
+  // Find max value for scaling
+  const maxValue = Math.max(
+    ...financeChartData.value.map(d => Math.max(d.income, d.expense)),
+    1 // Prevent division by zero
+  );
+  
+  const incomePoints = financeChartData.value.map((d, i) => {
+    const x = (i / (financeChartData.value.length - 1)) * width;
+    const y = height - padding - ((d.income / maxValue) * (height - padding * 2));
+    return { x, y, value: d.income };
+  });
+  
+  const expensePoints = financeChartData.value.map((d, i) => {
+    const x = (i / (financeChartData.value.length - 1)) * width;
+    const y = height - padding - ((d.expense / maxValue) * (height - padding * 2));
+    return { x, y, value: d.expense };
+  });
+  
+  return { income: incomePoints, expense: expensePoints };
+});
+
+// Bezier curve helper for smooth rounded lines
+const createSmoothPath = (points: Array<{x: number, y: number}>) => {
+  if (points.length < 2) return '';
+  
+  const firstPoint = points[0];
+  if (!firstPoint) return '';
+  
+  if (points.length === 2) {
+    const secondPoint = points[1];
+    if (!secondPoint) return '';
+    return `M ${firstPoint.x} ${firstPoint.y} L ${secondPoint.x} ${secondPoint.y}`;
+  }
+  
+  let path = `M ${firstPoint.x} ${firstPoint.y}`;
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = points[i];
+    const next = points[i + 1];
+    if (!current || !next) continue;
+    
+    const controlPointX = (current.x + next.x) / 2;
+    
+    path += ` Q ${controlPointX} ${current.y}, ${controlPointX} ${(current.y + next.y) / 2}`;
+    path += ` Q ${controlPointX} ${next.y}, ${next.x} ${next.y}`;
+  }
+  
+  return path;
+};
+
+const incomePathLine = computed(() => {
+  const points = financeChartPoints.value.income;
+  if (points.length === 0) return '';
+  return createSmoothPath(points);
+});
+
+const expensePathLine = computed(() => {
+  const points = financeChartPoints.value.expense;
+  if (points.length === 0) return '';
+  return createSmoothPath(points);
+});
+
+const incomePathArea = computed(() => {
+  const points = financeChartPoints.value.income;
+  if (points.length < 2) return '';
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (!first || !last) return '';
+  const line = incomePathLine.value;
+  return `${line} L ${last.x} 160 L ${first.x} 160 Z`;
+});
+
+const expensePathArea = computed(() => {
+  const points = financeChartPoints.value.expense;
+  if (points.length < 2) return '';
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (!first || !last) return '';
+  const line = expensePathLine.value;
+  return `${line} L ${last.x} 160 L ${first.x} 160 Z`;
+});
 </script>
 
 <template>
-  <AppShell>
+  <AppShell pageTitle="Beranda" pageSubtitle="Selamat datang di PRSDN Dashboard">
     <div class="user-home-page">
-      <div class="page-header mb-6">
-        <h1>Dashboard</h1>
-        <p class="text-secondary">Selamat datang kembali, {{ member?.fullName }}</p>
-      </div>
 
       <div class="dashboard-grid">
         <!-- LEFT COLUMN: Stats & Active Event -->
@@ -249,74 +392,186 @@ const handleCheckin = async () => {
           </div>
 
           <!-- Section 2: Active Event -->
-          <BaseCard v-if="activeEvent" class="mb-6 active-event-card-wrapper" variant="success" title="Event Aktif">
+          <div v-if="activeEvent" class="card mb-6 active-event-card">
             <div class="card-body">
-              <div class="event-header">
-                <h2 class="event-title">{{ activeEvent.title }}</h2>
-                <p class="event-time">
-                  {{ formatDate(activeEvent.date) }} • 
-                  {{ activeEvent.startTime ? activeEvent.startTime.substring(0, 5) : '' }} - 
-                  {{ activeEvent.endTime ? activeEvent.endTime.substring(0, 5) : 'Selesai' }} WIB
-                </p>
-                <p v-if="activeEvent.description" class="event-desc">{{ activeEvent.description }}</p>
+              <div class="active-event-header">
+                <h3>Event Aktif</h3>
               </div>
-
-              <div class="checkin-area">
-                <div v-if="alreadyCheckedIn" class="checkin-success-state">
-                  <div class="success-icon">✓</div>
-                  <h3>Kamu sudah absen!</h3>
-                  <p class="text-secondary">Terima kasih sudah hadir.</p>
-                </div>
-
-                <div v-else-if="activeEvent.token && !isTokenExpired" class="checkin-form">
-                  <div class="token-info mb-4">
-                    <p class="text-secondary text-sm mb-1">Token Absen Berlaku:</p>
-                    <CountdownTimer :expiresAt="activeEvent.tokenExpiresAt" />
-                  </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label">Masukkan Token Absen</label>
-                    <div class="input-group">
-                      <input 
-                        v-model="tokenInput"
-                        type="text" 
-                        class="form-input text-uppercase tracking-wider font-bold text-center"
-                        placeholder="XXXXXX"
-                        maxlength="6"
-                        :disabled="isSubmitting"
-                      >
-                      <button 
-                        @click="handleCheckin" 
-                        class="btn btn-primary w-full mt-2"
-                        :disabled="!tokenInput || isSubmitting"
-                      >
-                        {{ isSubmitting ? 'Memproses...' : 'Submit Absen' }}
-                      </button>
+              
+              <!-- Event Card Content -->
+              <div class="event-card-layout">
+                <!-- Left: Event Details -->
+                <div class="event-details-col">
+                  <div class="event-detail-header">
+                    <h2>{{ activeEvent.title }}</h2>
+                    <div class="event-meta">
+                      <span>{{ formatDate(activeEvent.date) }}</span>
+                      <span v-if="activeEvent.startTime">{{ activeEvent.startTime.substring(0, 5) }} - {{ activeEvent.endTime ? activeEvent.endTime.substring(0, 5) : 'Selesai' }} WIB</span>
                     </div>
-                    <p v-if="checkinError" class="text-error mt-2 text-sm">{{ checkinError }}</p>
-                    <p v-if="checkinSuccess" class="text-success mt-2 text-sm">{{ checkinSuccess }}</p>
                   </div>
+                  <p v-if="activeEvent.description || activeEvent.notes" class="event-description">{{ activeEvent.description || activeEvent.notes }}</p>
                 </div>
 
-                <div v-else class="waiting-state text-center py-6">
-                  <p class="text-secondary">Menunggu token dari admin/petugas...</p>
+                <!-- Right: Input Form -->
+                <div class="event-form-col">
+                  <div v-if="alreadyCheckedIn" class="checkin-success">
+                    <div class="success-icon">✓</div>
+                    <h3>Kamu sudah absen!</h3>
+                    <p class="text-secondary">Terima kasih sudah hadir.</p>
+                  </div>
+                  <div v-else-if="activeEvent.token" class="input-button-stack">
+                    <input 
+                      v-model="tokenInput"
+                      type="text" 
+                      class="form-input token-input-field"
+                      placeholder="Masukkan kode token"
+                      maxlength="6"
+                      :disabled="isSubmitting || isTokenExpired"
+                    >
+                    <button 
+                      @click="handleCheckin" 
+                      class="btn btn-primary btn-countdown"
+                      :disabled="isSubmitting || isTokenExpired"
+                    >
+                      <span v-if="isTokenExpired">Waktu Habis</span>
+                      <span v-else-if="isSubmitting">Memproses...</span>
+                      <span v-else-if="tokenInput">Submit Absen</span>
+                      <CountdownTimer v-else :expiresAt="activeEvent.tokenExpiresAt" :compact="true" />
+                    </button>
+                  </div>
+                  <div v-else class="waiting-state-text">
+                    <p class="text-secondary">Menunggu token dari admin/petugas...</p>
+                  </div>
+                  <p v-if="checkinError" class="text-error mt-2 text-sm">{{ checkinError }}</p>
+                  <p v-if="checkinSuccess" class="text-success mt-2 text-sm">{{ checkinSuccess }}</p>
                 </div>
               </div>
             </div>
-          </BaseCard>
+          </div>
 
-          <BaseCard v-else class="mb-6" title="Event Aktif">
-            <div class="card-body text-center py-12">
-              <span class="text-4xl mb-4 block">😴</span>
-              <h3 class="text-lg font-medium text-primary">Tidak Ada Event Aktif</h3>
-              <p class="text-secondary mt-2">Belum ada kegiatan yang sedang berlangsung saat ini.</p>
+          <!-- Finance Chart Section (Moved here) -->
+          <BaseCard title="Grafik Keuangan" class="mb-6 h-fit">
+          <div class="finance-chart-container">
+            <!-- Legend (Top Right) -->
+            <div class="chart-legend-compact">
+              <div class="legend-item-compact">
+                <div class="legend-indicator-compact bg-success"></div>
+                <span class="legend-text">Pemasukan</span>
+              </div>
+              <div class="legend-item-compact">
+                <div class="legend-indicator-compact bg-danger"></div>
+                <span class="legend-text">Pengeluaran</span>
+              </div>
             </div>
-          </BaseCard>
-        </div>
+            
+            <div class="chart-content">
+              <div v-if="financeChartData.length === 0" class="text-center text-secondary py-8">
+                Belum ada data transaksi keuangan.
+              </div>
+              <div v-else class="line-chart-wrapper">
+                <!-- SVG Dual-Line Chart -->
+                <svg class="line-chart" viewBox="0 0 600 160" preserveAspectRatio="none">
+                  <!-- Gradient Definitions -->
+                  <defs>
+                    <linearGradient id="incomeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="var(--color-success)" stop-opacity="0.3" />
+                      <stop offset="100%" stop-color="var(--color-success)" stop-opacity="0.05" />
+                    </linearGradient>
+                    <linearGradient id="expenseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="var(--color-danger)" stop-opacity="0.3" />
+                      <stop offset="100%" stop-color="var(--color-danger)" stop-opacity="0.05" />
+                    </linearGradient>
+                  </defs>
+                  
+                  <!-- Grid Lines -->
+                  <g class="grid-lines">
+                    <line x1="0" y1="40" x2="600" y2="40" stroke="var(--color-border-light)" stroke-width="1" stroke-dasharray="4 4" />
+                    <line x1="0" y1="80" x2="600" y2="80" stroke="var(--color-border-light)" stroke-width="1" stroke-dasharray="4 4" />
+                    <line x1="0" y1="120" x2="600" y2="120" stroke="var(--color-border-light)" stroke-width="1" stroke-dasharray="4 4" />
+                  </g>
+                  
+                  <!-- Expense Area (behind) -->
+                  <path 
+                    :d="expensePathArea" 
+                    fill="url(#expenseGradient)"
+                    class="chart-area"
+                  />
+                  
+                  <!-- Income Area -->
+                  <path 
+                    :d="incomePathArea" 
+                    fill="url(#incomeGradient)"
+                    class="chart-area"
+                  />
+                  
+                  <!-- Expense Line -->
+                  <path 
+                    :d="expensePathLine" 
+                    fill="none" 
+                    stroke="var(--color-danger)" 
+                    stroke-width="3" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                    class="chart-line"
+                  />
+                  
+                  <!-- Income Line -->
+                  <path 
+                    :d="incomePathLine" 
+                    fill="none" 
+                    stroke="var(--color-success)" 
+                    stroke-width="3" 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                    class="chart-line"
+                  />
+                  
+                  <!-- Income Points -->
+                  <g v-for="(point, index) in financeChartPoints.income" :key="'income-' + index">
+                    <circle 
+                      :cx="point.x" 
+                      :cy="point.y" 
+                      r="5" 
+                      fill="var(--color-success)"
+                      stroke="white"
+                      stroke-width="2"
+                      class="chart-point"
+                    >
+                      <title>Pemasukan: {{ formatCurrency(point.value) }}</title>
+                    </circle>
+                  </g>
+                  
+                  <!-- Expense Points -->
+                  <g v-for="(point, index) in financeChartPoints.expense" :key="'expense-' + index">
+                    <circle 
+                      :cx="point.x" 
+                      :cy="point.y" 
+                      r="5" 
+                      fill="var(--color-danger)"
+                      stroke="white"
+                      stroke-width="2"
+                      class="chart-point"
+                    >
+                      <title>Pengeluaran: {{ formatCurrency(point.value) }}</title>
+                    </circle>
+                  </g>
+                </svg>
+                
+                <!-- X Axis Labels -->
+                <div class="chart-x-axis">
+                  <div v-for="item in financeChartData" :key="item.month" class="axis-label">
+                    <span class="month">{{ item.monthLabel }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
 
         <!-- RIGHT COLUMN: Upcoming Events -->
         <div class="sidebar-content">
-          <BaseCard title="Event Akan Datang" class="h-full">
+          <BaseCard title="Event Akan Datang" class="h-full max-h-screen overflow-hidden">
             <div class="upcoming-scroll-area">
               <div v-if="upcomingEventsList.length === 0" class="text-secondary text-sm text-center py-4">
                 Tidak ada event mendatang.
@@ -345,6 +600,7 @@ const handleCheckin = async () => {
         </div>
       </div>
 
+
     </div>
   </AppShell>
 </template>
@@ -360,68 +616,31 @@ const handleCheckin = async () => {
 
 @media (min-width: 900px) {
   .user-home-page {
-    /* Desktop: Full height, internal scrolling */
-    /* Subtract topbar, padding, and a small buffer for borders to prevent body scroll */
-    min-height: calc(100vh - var(--topbar-height, 65px) - var(--space-8, 32px) * 2 - 2px);
-    display: flex;
-    flex-direction: column;
+    /* Allow natural scrolling */
+    overflow-y: auto;
   }
 
   .dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: var(--space-6);
-    flex: 1;
-    min-height: 0;
-    overflow: hidden; 
   }
   
   .main-content {
-    /* Disable scrolling on the container itself */
-    overflow-y: hidden; 
-    padding-right: var(--space-2);
     display: flex;
     flex-direction: column;
-    height: 100%;
-  }
-
-  /* Make the active event card fill the remaining space */
-  :deep(.active-event-card-wrapper) {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; 
-    margin-bottom: 0 !important; 
-  }
-
-  /* Ensure card body inside active event expands and handles overflow */
-  :deep(.active-event-card-wrapper .card-body) {
-    flex: 1;
-    display: flex;
-    flex-direction: row; /* Side-by-side on desktop */
-    align-items: start;
-    justify-content: space-between;
-    gap: var(--space-6);
-    overflow: hidden; /* No scroll needed usually */
-  }
-
-  /* Split width equally */
-  :deep(.event-header),
-  :deep(.checkin-area) {
-    flex: 1;
-    width: 50%;
   }
 
   .sidebar-content {
-    height: 100%;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    position: sticky;
+    top: var(--space-6);
+    max-height: calc(100vh - var(--topbar-height) - var(--space-6) * 2);
   }
 
   .upcoming-scroll-area {
     overflow-y: auto;
-    height: 100%;
     padding: var(--space-6);
   }
 
@@ -477,50 +696,250 @@ const handleCheckin = async () => {
 
 
 
-/* Active Event Styles */
-.active-event-card {
-    border-left: 4px solid var(--color-success);
+/* Active Event Card - Two Column Layout */
+
+.event-card-layout {
+  display: flex;
+  gap: var(--space-8);
+  align-items: stretch;
+  min-height: 200px;
 }
 
-.event-title {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-2);
+.event-details-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-.event-time {
-    color: var(--color-text-secondary);
-    font-size: var(--text-base);
-    margin-bottom: var(--space-4);
+.event-detail-header h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-3);
 }
 
-.checkin-area {
-    background-color: var(--color-bg-subtle);
-    padding: var(--space-4);
-    border-radius: var(--radius-md);
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
 }
 
-.checkin-success-state {
-    text-align: center;
-    color: var(--color-success);
+.event-description {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-form-col {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: flex-end;
+}
+
+.input-button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.token-input-field {
+  width: 100%;
+  text-align: left;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: var(--text-base);
+}
+
+.btn-countdown {
+  width: 100%;
+  white-space: nowrap;
+  padding: var(--space-3) var(--space-6);
+}
+
+.token-expired-text {
+  color: var(--color-text-secondary);
+}
+
+.token-expired-text p {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.line-chart-wrapper {
+  position: relative;
+  padding-bottom: var(--space-4);
+}
+
+.line-chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+  overflow: visible;
+}
+
+.chart-area {
+  transition: all 0.3s ease;
+}
+
+.chart-line {
+  transition: all 0.3s ease;
+}
+
+.chart-point {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chart-point:hover {
+  r: 7;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.grid-lines {
+  opacity: 0.5;
+}
+
+/* Chart Legend - Compact Top Right */
+.chart-legend-compact {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.legend-item-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend-indicator-compact {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.finance-chart-container {
+  position: relative;
+  padding: var(--space-3);
+}
+
+.chart-x-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  padding: 0 4px;
+}
+
+.axis-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.axis-label .month {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.bg-success { background-color: var(--color-success); }
+.bg-danger { background-color: var(--color-danger); }
+.bg-primary { background-color: var(--color-primary); }
+
+@media (max-width: 768px) {
+  .event-card-layout {
+    flex-direction: column;
+  }
+
+  .event-form-col {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+.checkin-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+  color: var(--color-success);
+  padding: var(--space-4);
+}
+
+.checkin-success h3 {
+  color: var(--color-text-primary);
+  margin: 0;
+  font-size: var(--text-lg);
 }
 
 .success-icon {
-    font-size: 3rem;
-    margin-bottom: var(--space-2);
+  font-size: 3rem;
+  margin-bottom: var(--space-2);
 }
 
-.form-input.text-center {
-    text-align: center;
+.waiting-state {
+  padding: var(--space-4);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  text-align: center;
 }
 
-.text-uppercase {
-    text-transform: uppercase;
-}
+@media (max-width: 768px) {
+  .event-top-section {
+    flex-direction: column;
+  }
 
-.tracking-wider {
-    letter-spacing: 0.25em;
+  .countdown-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .checkin-input-row {
+    flex-direction: column;
+  }
+
+  .notes-section {
+    flex: 1;
+    width: 100%;
+  }
+
+  .input-button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .input-button-group .btn {
+    width: 100%;
+  }
 }
 
 /* Upcoming Events Styles */
@@ -569,4 +988,14 @@ const handleCheckin = async () => {
     font-size: var(--text-xs);
     color: var(--color-text-secondary);
 }
+
+/* Finance Chart Styles */
+.finance-chart-container {
+  padding: var(--space-4);
+}
+
+.chart-content {
+  width: 100%;
+}
+
 </style>

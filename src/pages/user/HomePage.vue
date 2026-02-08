@@ -392,14 +392,21 @@ const expensePathArea = computed(() => {
           </div>
 
           <!-- Section 2: Active Event -->
-          <div v-if="activeEvent" class="card mb-6 active-event-card">
+          <div class="card mb-6 active-event-card">
             <div class="card-body">
               <div class="active-event-header">
                 <h3>Event Aktif</h3>
               </div>
               
+              <!-- No Active Event State -->
+              <div v-if="!activeEvent" class="empty-event-state">
+                <span class="empty-icon">📅</span>
+                <h3>Tidak Ada Event Aktif</h3>
+                <p class="text-secondary">Belum ada kegiatan yang sedang berlangsung saat ini.</p>
+              </div>
+              
               <!-- Event Card Content -->
-              <div class="event-card-layout">
+              <div v-else class="event-card-layout">
                 <!-- Left: Event Details -->
                 <div class="event-details-col">
                   <div class="event-detail-header">
@@ -635,8 +642,9 @@ const expensePathArea = computed(() => {
     display: flex;
     flex-direction: column;
     position: sticky;
-    top: var(--space-6);
-    max-height: calc(100vh - var(--topbar-height) - var(--space-6) * 2);
+    top: 0;
+    align-self: start;
+    max-height: calc(90vh - var(--topbar-height));
   }
 
   .upcoming-scroll-area {
@@ -697,6 +705,32 @@ const expensePathArea = computed(() => {
 
 
 /* Active Event Card - Two Column Layout */
+
+.empty-event-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.empty-event-state .empty-icon {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+.empty-event-state h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.empty-event-state p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
 
 .event-card-layout {
   display: flex;

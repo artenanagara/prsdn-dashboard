@@ -2,6 +2,10 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { Session } from '../types';
 import { supabase } from '../lib/supabase';
+import CryptoJS from 'crypto-js';
+
+// Secret key for encryption (In production, use an environment variable)
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'prsdn-secure-session-v1';
 
 export const useAuthStore = defineStore('auth', () => {
     const session = ref<Session | null>(null);
@@ -12,11 +16,47 @@ export const useAuthStore = defineStore('auth', () => {
     const isUser = computed(() => session.value?.role === 'user');
     const currentUser = computed(() => session.value);
 
+    // Helper to encrypt data
+    const encryptData = (data: any): string => {
+        return CryptoJS.AES.encrypt(JSON.stringify(data), ENCRYPTION_KEY).toString();
+    };
+
+    // Helper to decrypt data
+    const decryptData = (ciphertext: string): any | null => {
+        try {
+            const bytes = CryptoJS.AES.decrypt(ciphertext, ENCRYPTION_KEY);
+            const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            return decryptedData;
+        } catch (e) {
+            console.error("Failed to decrypt session", e);
+            return null;
+        }
+    };
+
     // Initialize from localStorage
     const initSession = () => {
         const stored = localStorage.getItem('prsdn_session');
         if (stored) {
-            session.value = JSON.parse(stored);
+            // Try to decrypt first
+            const decrypted = decryptData(stored);
+            if (decrypted) {
+                session.value = decrypted;
+            } else {
+                // Fallback for migration: try to parse as plain JSON (backward compatibility)
+                try {
+                    const plain = JSON.parse(stored);
+                    if (plain && plain.userId) {
+                        session.value = plain;
+                        // Determine if we should upgrade to encrypted immediately? 
+                        // Maybe wait for next login or update, or do it now.
+                        // Let's re-save as encrypted to migrate.
+                        localStorage.setItem('prsdn_session', encryptData(plain));
+                    }
+                } catch (e) {
+                    // Invalid data, clear it
+                    localStorage.removeItem('prsdn_session');
+                }
+            }
         }
     };
 
@@ -55,7 +95,8 @@ export const useAuthStore = defineStore('auth', () => {
             };
 
             session.value = sessionData;
-            localStorage.setItem('prsdn_session', JSON.stringify(sessionData));
+            // Encrypt before saving
+            localStorage.setItem('prsdn_session', encryptData(sessionData));
 
             return { success: true };
         } catch (error) {
@@ -115,7 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
                     ...session.value,
                     username: newUsername
                 };
-                localStorage.setItem('prsdn_session', JSON.stringify(session.value));
+                // Encrypt before saving
+                localStorage.setItem('prsdn_session', encryptData(session.value));
             }
 
             return { success: true };

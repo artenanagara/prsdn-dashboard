@@ -8,7 +8,8 @@ import {
   DollarSign,
   Menu,
   X,
-  ClipboardCheck
+  ClipboardCheck,
+  Vote
 } from 'lucide-vue-next';
 import { ref } from 'vue';
 
@@ -54,13 +55,15 @@ const adminNavItems = [
       { path: '/admin/finance/kas', label: 'Kas Online' }
     ]
   },
-  { path: '/admin/attendance-events', label: 'Absensi', icon: ClipboardCheck }
+  { path: '/admin/attendance-events', label: 'Absensi', icon: ClipboardCheck },
+  { path: '/admin/polls/list', label: 'Voting', icon: Vote }
 ];
 
 const userNavItems = [
   { path: '/user/home', label: 'Beranda', icon: LayoutDashboard },
   { path: '/user/kas', label: 'Kas Saya', icon: DollarSign },
-  { path: '/user/attendance-checkin', label: 'Absensi', icon: ClipboardCheck }
+  { path: '/user/attendance-checkin', label: 'Absensi', icon: ClipboardCheck },
+  { path: '/user/polls', label: 'Voting', icon: Vote }
 ];
 
 // Expanded state for menus
@@ -141,11 +144,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
       <div class="sidebar-footer">
         <div class="version-info">
-          <p class="version-title">PRSDN Dashboard</p>
           <p class="version-number">v1.5.0</p>
-          <a href="https://prsdn.org" target="_blank" class="version-link">
-            prsdn.org
-          </a>
         </div>
       </div>
     </aside>

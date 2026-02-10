@@ -64,6 +64,31 @@ const router = createRouter({
             component: () => import('../pages/admin/AttendanceEventsPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
+        // Polls Management Routes
+        {
+            path: '/admin/polls/list',
+            name: 'AdminPollsList',
+            component: () => import('../pages/admin/polls/PollsListPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/polls/create',
+            name: 'AdminPollCreate',
+            component: () => import('../pages/admin/polls/PollCreatePage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/polls/:id',
+            name: 'AdminPollDetail',
+            component: () => import('../pages/admin/polls/PollDetailPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/polls/edit/:id',
+            name: 'AdminPollEdit',
+            component: () => import('../pages/admin/polls/PollCreatePage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
         {
             path: '/user',
             redirect: '/user/home',
@@ -97,6 +122,18 @@ const router = createRouter({
             path: '/user/settings',
             name: 'UserSettings',
             component: () => import('../pages/user/SettingsPage.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/user/polls',
+            name: 'UserPolls',
+            component: () => import('../pages/user/polls/UserPollsPage.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/user/polls/:id',
+            name: 'UserPollDetail',
+            component: () => import('../pages/user/polls/UserPollDetailPage.vue'),
             meta: { requiresAuth: true }
         },
         {

@@ -38,6 +38,37 @@ export interface UserAccount {
   createdAt: string;
 }
 
+// Voting Feature Interfaces
+export interface Poll {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'voting' | 'polling';
+  questionType: 'single_choice' | 'multiple_choice';
+  isAnonymous: boolean;
+  requiresLogin: boolean;
+  startDate: string; // ISO String
+  endDate: string; // ISO String
+  resultVisibility: 'always' | 'after_vote' | 'after_close';
+  status: 'draft' | 'active' | 'closed' | 'archived';
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface PollOption {
+  id: string;
+  pollId: string;
+  label: string;
+}
+
+export interface PollVote {
+  id: string;
+  pollId: string;
+  optionId: string;
+  userId: string;
+  createdAt: string;
+}
+
 export interface AttendanceRecord {
   id: string;
   date: string; // YYYY-MM-DD

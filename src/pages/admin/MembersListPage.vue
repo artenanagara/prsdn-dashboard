@@ -33,7 +33,10 @@ const formData = ref({
   instagram: '',
   job: '',
   educationStatus: 'not_school' as 'school' | 'not_school',
-  educationLevel: undefined as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined
+  educationLevel: undefined as 'SD' | 'SMP' | 'SMA/SMK' | 'College' | undefined,
+  grade: undefined as string | undefined,
+  university: undefined as string | undefined,
+  joinedWhatsApp: false
 });
 
 const rtOptions = [
@@ -96,7 +99,10 @@ const resetForm = () => {
     instagram: '',
     job: '',
     educationStatus: 'not_school',
-    educationLevel: undefined
+    educationLevel: undefined,
+    grade: undefined,
+    university: undefined,
+    joinedWhatsApp: false
   };
 };
 
@@ -107,11 +113,25 @@ onMounted(() => {
 });
 
 const handleSubmit = async () => {
-  const { educationLevel, ...rest } = formData.value;
-  const data = {
-    ...rest,
-    ...(formData.value.educationStatus === 'school' ? { educationLevel } : {})
+  const { educationLevel, grade, university, ...rest } = formData.value;
+  const data: any = {
+    ...rest
   };
+
+  // Only include education fields if status is 'school'
+  if (formData.value.educationStatus === 'school') {
+    data.educationLevel = educationLevel;
+    
+    // Include grade for SD, SMP, SMA/SMK
+    if (educationLevel && educationLevel !== 'College') {
+      data.grade = grade || null;
+    }
+    
+    // Include university for College
+    if (educationLevel === 'College') {
+      data.university = university || null;
+    }
+  }
 
   if (editingMember.value) {
     await membersStore.updateMember(editingMember.value.id, data);
@@ -215,14 +235,13 @@ const formatDate = (date: string | null) => {
                 <th>RT</th>
                 <th>No. HP</th>
                 <th>Pekerjaan</th>
-                <th>Pendidikan</th>
-                <th>Bergabung</th>
-                <th>Aksi</th>
+                <th>Instagram</th>
+                <th class="text-right">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="membersStore.isLoading">
-                <td colspan="7" class="text-center py-8">
+                <td colspan="6" class="text-center py-8">
                   <div class="flex items-center justify-center gap-2 text-secondary">
                     <span class="loading-spinner"></span>
                     <span>Memuat data anggota...</span>
@@ -230,7 +249,7 @@ const formatDate = (date: string | null) => {
                 </td>
               </tr>
               <tr v-else-if="filteredMembers.length === 0">
-                <td colspan="7" class="empty-cell">
+                <td colspan="6" class="empty-cell">
                   <EmptyState
                     :icon="searchQuery || selectedRT !== 'all' ? 'search' : 'users'"
                     title="Tidak ada data"
@@ -243,14 +262,8 @@ const formatDate = (date: string | null) => {
                 <td><span class="badge badge-secondary">RT {{ member.rt }}</span></td>
                 <td>{{ member.phone }}</td>
                 <td>{{ member.job }}</td>
-                <td>
-                  <span v-if="member.educationStatus === 'school'" class="badge badge-info">
-                    {{ member.educationLevel || 'Sekolah' }}
-                  </span>
-                  <span v-else class="badge badge-secondary">-</span>
-                </td>
-                <td class="text-secondary text-sm">{{ formatDate(member.createdAt) }}</td>
-                <td>
+                <td>{{ member.instagram || '-' }}</td>
+                <td class="text-right">
                   <div class="action-buttons">
                     <button @click="openViewModal(member)" class="btn btn-info btn-sm" title="Lihat Detail">
                       <Eye :size="16" />
@@ -333,6 +346,23 @@ const formatDate = (date: string | null) => {
                   v-model="formData.educationLevel" 
                   :options="eduLevelOptions" 
                 />
+              </div>
+
+              <div v-if="formData.educationStatus === 'school' && formData.educationLevel && formData.educationLevel !== 'College'" class="form-group">
+                <label class="form-label">Kelas</label>
+                <input v-model="formData.grade" type="text" class="form-input" placeholder="Contoh: 5, 8, 11" />
+              </div>
+
+              <div v-if="formData.educationStatus === 'school' && formData.educationLevel === 'College'" class="form-group">
+                <label class="form-label">Universitas</label>
+                <input v-model="formData.university" type="text" class="form-input" placeholder="Nama universitas" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label flex items-center gap-2 cursor-pointer">
+                  <input v-model="formData.joinedWhatsApp" type="checkbox" class="form-checkbox" />
+                  <span>Sudah bergabung grup WhatsApp</span>
+                </label>
               </div>
             </form>
           </div>
@@ -492,6 +522,7 @@ const formatDate = (date: string | null) => {
 .action-buttons {
   display: flex;
   gap: var(--space-2);
+  justify-content: flex-end;
 }
 
 

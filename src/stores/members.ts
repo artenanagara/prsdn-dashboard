@@ -51,6 +51,9 @@ export const useMembersStore = defineStore('members', () => {
                 job: record.job,
                 educationStatus: record.education_status,
                 educationLevel: record.education_level,
+                grade: record.grade,
+                university: record.university,
+                joinedWhatsApp: record.joined_whatsapp,
                 createdAt: record.created_at,
                 userRole: record.user_accounts?.role
             }));
@@ -86,7 +89,10 @@ export const useMembersStore = defineStore('members', () => {
                     instagram: data.instagram,
                     job: data.job,
                     education_status: data.educationStatus,
-                    education_level: data.educationLevel
+                    education_level: data.educationLevel,
+                    grade: data.grade,
+                    university: data.university,
+                    joined_whatsapp: data.joinedWhatsApp
                 })
                 .select()
                 .single();
@@ -117,6 +123,9 @@ export const useMembersStore = defineStore('members', () => {
             if (data.job !== undefined) updateData.job = data.job;
             if (data.educationStatus !== undefined) updateData.education_status = data.educationStatus;
             if (data.educationLevel !== undefined) updateData.education_level = data.educationLevel;
+            if (data.grade !== undefined) updateData.grade = data.grade;
+            if (data.university !== undefined) updateData.university = data.university;
+            if (data.joinedWhatsApp !== undefined) updateData.joined_whatsapp = data.joinedWhatsApp;
 
             const { error } = await (supabase
                 .from('members') as any)

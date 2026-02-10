@@ -16,7 +16,12 @@ const authStore = useAuthStore();
 const membersStore = useMembersStore();
 
 const tokenValue = ref('');
-const isSubmitting = ref(false);
+const formattedTokenValue = computed({
+  get: () => tokenValue.value,
+  set: (value: string) => {
+    tokenValue.value = value.toUpperCase();
+  }
+});const isSubmitting = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 
@@ -153,7 +158,7 @@ const formatDate = (dateString: string | number) => {
               </div>
               <div v-else-if="hasToken" class="input-button-stack">
                 <input 
-                  v-model="tokenValue"
+                  v-model="formattedTokenValue"
                   type="text" 
                   class="form-input token-input-field"
                   placeholder="Masukkan kode token"

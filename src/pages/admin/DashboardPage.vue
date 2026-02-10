@@ -1,32 +1,20 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Line } from 'vue-chartjs';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
 import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
 import BaseCard from '../../components/BaseCard.vue';
+import AttendanceLineChart from '../../components/charts/AttendanceLineChart.vue';
 import { useFinanceStore } from '../../stores/finance';
 import { useMembersStore } from '../../stores/members';
 import { useKasStore } from '../../stores/kas';
-import { useCheckinStore } from '../../stores/checkin'; // Updated
+import { useCheckinStore } from '../../stores/checkin';
 import { useEventsStore } from '../../stores/events';
 import { Calendar, Gift, Briefcase, Flag } from 'lucide-vue-next';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const financeStore = useFinanceStore();
 const membersStore = useMembersStore();
 const kasStore = useKasStore();
-const checkinStore = useCheckinStore(); // Updated
+const checkinStore = useCheckinStore();
 const eventsStore = useEventsStore();
 
 const searchQuery = ref('');
@@ -124,42 +112,8 @@ const upcomingEvents = computed(() => {
 });
 
 const attendanceStats = computed(() => {
-  const stats = checkinStore.getLast6MonthsStats(); // Updated
-  return {
-    labels: stats.map(s => {
-      const [year, month] = s.month.split('-');
-      const date = new Date(parseInt(year!), parseInt(month!) - 1);
-      return date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
-    }),
-    datasets: [
-      {
-        label: 'Jumlah Kehadiran',
-        data: stats.map(s => s.count),
-        borderColor: '#1e3a8a',
-        backgroundColor: 'rgba(30, 58, 138, 0.1)',
-        tension: 0.4
-      }
-    ]
-  };
+  return checkinStore.getLast6MonthsStats();
 });
-
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      display: false
-    }
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        stepSize: 5
-      }
-    }
-  }
-};
 
 const filteredMembers = computed(() => {
   if (!searchQuery.value) {
@@ -263,7 +217,7 @@ onMounted(async () => {
         <!-- Attendance Chart -->
         <BaseCard class="chart-card" title="Kehadiran 6 Bulan Terakhir">
           <div class="chart-container">
-            <Line :data="attendanceStats" :options="chartOptions" />
+            <AttendanceLineChart :stats="attendanceStats" />
           </div>
         </BaseCard>
 

@@ -66,6 +66,103 @@ export const useAuthStore = defineStore('auth', () => {
         }
     };
 
+    const updateUsername = async (newUsername: string): Promise<{ success: boolean; error?: string }> => {
+        if (!currentUser.value?.userId) {
+            return { success: false, error: 'User not authenticated' };
+        }
+
+        // Import validation here to avoid circular dependency
+        const { validateUsername } = await import('../utils/validation');
+
+        // Validate username format
+        const validation = validateUsername(newUsername);
+        if (!validation.valid) {
+            return { success: false, error: validation.error };
+        }
+
+        try {
+            // Check if username already exists
+            const { data: existingUser, error: checkError } = await supabase
+                .from('user_accounts')
+                .select('id')
+                .eq('username', newUsername)
+                .neq('id', currentUser.value.userId)
+                .maybeSingle();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('Error checking username:', checkError);
+                return { success: false, error: 'Gagal memeriksa username' };
+            }
+
+            if (existingUser) {
+                return { success: false, error: 'Username sudah digunakan' };
+            }
+
+            // Update username
+            const { error: updateError } = await (supabase as any)
+                .from('user_accounts')
+                .update({ username: newUsername })
+                .eq('id', currentUser.value.userId);
+
+            if (updateError) {
+                console.error('Error updating username:', updateError);
+                return { success: false, error: 'Gagal mengubah username' };
+            }
+
+            // Update session
+            if (session.value) {
+                session.value = {
+                    ...session.value,
+                    username: newUsername
+                };
+                localStorage.setItem('prsdn_session', JSON.stringify(session.value));
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Username update error:', error);
+            return { success: false, error: 'Terjadi kesalahan' };
+        }
+    };
+
+    const updatePassword = async (oldPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+        if (!currentUser.value?.userId) {
+            return { success: false, error: 'User not authenticated' };
+        }
+
+        try {
+            // Verify old password
+            const { data: account, error: fetchError } = await supabase
+                .from('user_accounts')
+                .select('password')
+                .eq('id', currentUser.value.userId)
+                .single();
+
+            if (fetchError || !account) {
+                return { success: false, error: 'Failed to verify current password' };
+            }
+
+            if ((account as any).password !== oldPassword) {
+                return { success: false, error: 'Password lama tidak sesuai' };
+            }
+
+            // Update password
+            const { error: updateError } = await (supabase
+                .from('user_accounts') as any)
+                .update({ password: newPassword })
+                .eq('id', currentUser.value.userId);
+
+            if (updateError) {
+                return { success: false, error: 'Failed to update password' };
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Password update error:', error);
+            return { success: false, error: 'An unexpected error occurred' };
+        }
+    };
+
     const logout = () => {
         session.value = null;
         localStorage.removeItem('prsdn_session');
@@ -80,6 +177,8 @@ export const useAuthStore = defineStore('auth', () => {
         currentUser,
         initSession,
         login,
+        updateUsername,
+        updatePassword,
         logout
     };
 });

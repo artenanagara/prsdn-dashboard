@@ -6,6 +6,7 @@ import BaseCard from '../../components/BaseCard.vue';
 import FinanceLineChart from '../../components/charts/FinanceLineChart.vue';
 import ActiveEventCard from '../../components/events/ActiveEventCard.vue';
 import UpcomingEventsList from '../../components/events/UpcomingEventsList.vue';
+import UsernameUpdateModal from '../../components/UsernameUpdateModal.vue';
 import { useAuthStore } from '../../stores/auth';
 import { useMembersStore } from '../../stores/members';
 import { useKasStore } from '../../stores/kas';
@@ -13,6 +14,7 @@ import { useAttendanceEventStore } from '../../stores/attendanceEvent';
 import { useCheckinStore } from '../../stores/checkin';
 import { useUIStore } from '../../stores/ui';
 import { useFinanceStore } from '../../stores/finance';
+import { isValidUsername } from '../../utils/validation';
 
 const authStore = useAuthStore();
 const membersStore = useMembersStore();
@@ -224,6 +226,11 @@ const financeChartData = computed(() => {
   return months;
 });
 
+const showUsernameModal = computed(() => {
+  const username = authStore.currentUser?.username;
+  return username && !isValidUsername(username);
+});
+
 </script>
 
 <template>
@@ -272,6 +279,9 @@ const financeChartData = computed(() => {
         </div>
       </div>
     </div>
+    
+    <!-- Username Update Modal -->
+    <UsernameUpdateModal v-if="showUsernameModal" />
   </AppShell>
 </template>
 

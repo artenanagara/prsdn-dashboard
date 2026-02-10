@@ -4,11 +4,14 @@ import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
 import BaseCard from '../../components/BaseCard.vue';
 import AttendanceLineChart from '../../components/charts/AttendanceLineChart.vue';
+import UsernameUpdateModal from '../../components/UsernameUpdateModal.vue';
 import { useFinanceStore } from '../../stores/finance';
 import { useMembersStore } from '../../stores/members';
 import { useKasStore } from '../../stores/kas';
 import { useCheckinStore } from '../../stores/checkin';
 import { useEventsStore } from '../../stores/events';
+import { useAuthStore } from '../../stores/auth';
+import { isValidUsername } from '../../utils/validation';
 import { Calendar, Gift, Briefcase, Flag } from 'lucide-vue-next';
 
 const financeStore = useFinanceStore();
@@ -16,6 +19,7 @@ const membersStore = useMembersStore();
 const kasStore = useKasStore();
 const checkinStore = useCheckinStore();
 const eventsStore = useEventsStore();
+const authStore = useAuthStore();
 
 const searchQuery = ref('');
 
@@ -185,6 +189,12 @@ onMounted(async () => {
   await eventsStore.loadEvents();
   eventsStore.subscribeToChanges();
 });
+
+const showUsernameModal = computed(() => {
+  const username = authStore.currentUser?.username;
+  return username && !isValidUsername(username);
+});
+
 </script>
 
 <template>
@@ -303,6 +313,9 @@ onMounted(async () => {
         </template>
       </BaseCard>
     </div>
+    
+    <!-- Username Update Modal -->
+    <UsernameUpdateModal v-if="showUsernameModal" />
   </AppShell>
 </template>
 

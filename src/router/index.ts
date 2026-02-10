@@ -94,6 +94,18 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/user/settings',
+            name: 'UserSettings',
+            component: () => import('../pages/user/SettingsPage.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/admin/settings',
+            name: 'AdminSettings',
+            component: () => import('../pages/user/SettingsPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
             path: '/error',
             name: 'Error',
             component: () => import('../pages/ErrorPage.vue')

@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { useMembersStore } from '../stores/members';
+import UserDropdown from './UserDropdown.vue';
 import {
   LayoutDashboard,
   Users,
   DollarSign,
-  LogOut,
   Menu,
   X,
   ClipboardCheck
 } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 // Props for page title and subtitle
 const props = defineProps<{
@@ -20,18 +19,7 @@ const props = defineProps<{
 }>();
 
 const authStore = useAuthStore();
-const membersStore = useMembersStore();
-const router = useRouter();
 const isSidebarOpen = ref(window.innerWidth >= 1024);
-
-// Get current user's full name from members store
-const currentUserFullName = computed(() => {
-  if (authStore.currentUser?.memberId) {
-    const member = membersStore.getMemberById(authStore.currentUser.memberId);
-    return member?.fullName || authStore.currentUser.username;
-  }
-  return authStore.currentUser?.username || 'User';
-});
 
 import { onMounted } from 'vue';
 
@@ -41,11 +29,6 @@ onMounted(() => {
     isSidebarOpen.value = false;
   }
 });
-
-const handleLogout = () => {
-  authStore.logout();
-  router.push('/login');
-};
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
@@ -157,12 +140,13 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
       </nav>
 
       <div class="sidebar-footer">
-        <button @click="handleLogout" class="nav-item nav-item-logout">
-          <div class="flex items-center gap-3">
-            <LogOut :size="20" />
-            <span>Keluar</span>
-          </div>
-        </button>
+        <div class="version-info">
+          <p class="version-title">PRSDN Dashboard</p>
+          <p class="version-number">v1.5.0</p>
+          <a href="https://prsdn.org" target="_blank" class="version-link">
+            prsdn.org
+          </a>
+        </div>
       </div>
     </aside>
 
@@ -182,11 +166,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
         </div>
 
         <div class="topbar-user">
-          <div class="topbar-user-info">
-            <span class="topbar-fullname">{{ currentUserFullName }}</span>
-            <span class="topbar-username">@{{ authStore.currentUser?.username }}</span>
-          </div>
-          <img src="/default-avatar.png" alt="Profile" class="topbar-avatar" />
+          <UserDropdown />
         </div>
       </header>
 
@@ -331,13 +311,36 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   min-width: var(--sidebar-width);
 }
 
-.nav-item-logout {
-  color: var(--color-danger);
-  justify-content: flex-start;
+.version-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
 }
 
-.nav-item-logout:hover {
-  background-color: var(--color-danger-light);
+.version-title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.version-number {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.version-link {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.version-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
 }
 
 .main-content {
@@ -407,42 +410,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 .topbar-user {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
   flex-shrink: 0;
-}
-
-.topbar-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.topbar-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.topbar-fullname {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.topbar-username {
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: right; 
 }
 
 .page-content {
@@ -482,10 +450,6 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
   .topbar-page-subtitle {
     font-size: var(--text-xs);
-  }
-
-  .topbar-user-info {
-    display: none; /* Hide user info on mobile to save space */
   }
 }
 </style>

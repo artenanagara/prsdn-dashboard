@@ -42,15 +42,27 @@ const currentItem = computed(() => paymentStore.getPaymentItemById(paymentItemId
 const combinedData = computed(() => {
     if (!currentItem.value) return [];
     
-    return membersStore.members.map(member => {
+    // Filter members: If it's a poll-generated payment, only show those with records (voters)
+    let membersToMap = membersStore.members;
+    const isPollPayment = currentItem.value.description?.includes('Poll') || false;
+
+    if (isPollPayment) {
+        membersToMap = membersToMap.filter(m => 
+            paymentStore.currentPaymentRecords.some(r => r.memberId === m.id)
+        );
+    }
+
+    return membersToMap.map(member => {
         const record = paymentStore.currentPaymentRecords.find(r => r.memberId === member.id);
+        const targetAmount = record?.billAmount ?? currentItem.value?.amount ?? 0;
         
         return {
             member,
             record,
             amountPaid: record?.amountPaid || 0,
             status: record?.status || 'unpaid',
-            remaining: (currentItem.value?.amount || 0) - (record?.amountPaid || 0)
+            remaining: targetAmount - (record?.amountPaid || 0),
+            billAmount: targetAmount
         };
     });
 });
@@ -168,7 +180,7 @@ const handlePaymentSubmit = async () => {
         paymentItemId,
         selectedMember.value.member.id,
         payAmount.value,
-        currentItem.value.amount
+        selectedMember.value.billAmount // Use the specific bill amount
     );
     
     if (success) {

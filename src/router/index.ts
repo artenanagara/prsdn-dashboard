@@ -65,9 +65,15 @@ const router = createRouter({
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {
-            path: '/admin/finance/payments/:id',
-            name: 'FinancePaymentDetail',
+            path: '/admin/finance/payment/:id',
+            name: 'PaymentDetail',
             component: () => import('../pages/admin/finance/PaymentDetailPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/finance/create-from-poll/:id',
+            name: 'CreatePaymentFromPoll',
+            component: () => import('../pages/admin/finance/CreatePaymentFromPollPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {

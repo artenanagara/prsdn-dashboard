@@ -23,6 +23,7 @@ const form = ref({
   startDate: new Date().toISOString().slice(0, 16),
   endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
   resultVisibility: 'after_vote' as 'always' | 'after_vote' | 'after_close',
+  allowEditVote: false,
   status: 'draft' as 'draft' | 'active' | 'closed' | 'archived',
 });
 
@@ -45,6 +46,7 @@ onMounted(async () => {
         startDate: new Date(poll.startDate).toISOString().slice(0, 16),
         endDate: new Date(poll.endDate).toISOString().slice(0, 16),
         resultVisibility: poll.resultVisibility,
+        allowEditVote: poll.allowEditVote || false,
         status: poll.status,
       };
       
@@ -200,6 +202,11 @@ const handleSubmit = async () => {
               <label class="checkbox-label">
                 <input v-model="form.isAnonymous" type="checkbox" />
                 <span>Voting Anonim</span>
+              </label>
+              
+              <label class="checkbox-label mt-2">
+                <input v-model="form.allowEditVote" type="checkbox" />
+                <span>Izinkan Ubah Pilihan</span>
               </label>
             </div>
 

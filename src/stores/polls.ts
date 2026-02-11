@@ -259,7 +259,10 @@ export const usePollsStore = defineStore('polls', () => {
     }
 
     async function submitVote(pollId: string, optionIds: string[]) {
-        if (hasUserVoted(pollId)) {
+        const poll = currentPoll.value || polls.value.find(p => p.id === pollId);
+        const alreadyVoted = hasUserVoted(pollId);
+
+        if (alreadyVoted && !poll?.allowEditVote) {
             error.value = "Anda sudah berpartisipasi dalam voting ini.";
             return false;
         }
@@ -268,6 +271,17 @@ export const usePollsStore = defineStore('polls', () => {
         error.value = null;
 
         try {
+            // If editing is allowed and user voted, delete old votes first
+            if (alreadyVoted && poll?.allowEditVote && authStore.currentUser?.userId) {
+                const { error: deleteError } = await (supabase as any)
+                    .from('poll_votes')
+                    .delete()
+                    .eq('poll_id', pollId)
+                    .eq('user_id', authStore.currentUser.userId);
+
+                if (deleteError) throw deleteError;
+            }
+
             const votes = optionIds.map(optId => ({
                 poll_id: pollId,
                 option_id: optId,
@@ -465,6 +479,7 @@ export const usePollsStore = defineStore('polls', () => {
             startDate: dbPoll.start_date,
             endDate: dbPoll.end_date,
             resultVisibility: dbPoll.result_visibility,
+            allowEditVote: dbPoll.allow_edit_vote,
             status: dbPoll.status,
             createdAt: dbPoll.created_at,
             createdBy: dbPoll.created_by
@@ -482,6 +497,7 @@ export const usePollsStore = defineStore('polls', () => {
             start_date: poll.startDate,
             end_date: poll.endDate,
             result_visibility: poll.resultVisibility,
+            allow_edit_vote: poll.allowEditVote,
             status: poll.status || 'draft',
             created_by: poll.createdBy
         };

@@ -139,6 +139,22 @@ const submitVote = async () => {
   await pollsStore.submitVote(pollId, selectedOptions.value);
   await pollsStore.fetchAllVotes(pollId); // Refresh results immediately
   isSubmitting.value = false;
+  isEditingVote.value = false;
+};
+
+// Edit Vote Logic
+const isEditingVote = ref(false);
+
+const startEditing = () => {
+  if (!poll.value) return;
+  const currentVotes = pollsStore.getUserVoteForPoll(poll.value.id);
+  selectedOptions.value = [...currentVotes];
+  isEditingVote.value = true;
+};
+
+const cancelEdit = () => {
+  isEditingVote.value = false;
+  selectedOptions.value = [];
 };
 
 // Helper
@@ -227,7 +243,7 @@ const getOptionLabel = (optionId: string) => {
               </template>
 
               <!-- IF VOTED -->
-              <div v-if="hasVoted" class="voted-state">
+              <div v-if="hasVoted && !isEditingVote" class="voted-state">
                 <div class="success-icon">
                   <CheckCircle :size="48" />
                 </div>
@@ -241,10 +257,20 @@ const getOptionLabel = (optionId: string) => {
                      </span>
                   </div>
                 </div>
+
+                <div v-if="poll.allowEditVote && poll.status === 'active'" class="mt-4">
+                  <button @click="startEditing" class="btn btn-outline btn-sm">
+                    Ubah Pilihan
+                  </button>
+                </div>
               </div>
 
-              <!-- IF NOT VOTED & ACTIVE -->
-              <div v-else-if="poll.status === 'active'" class="voting-form">
+              <!-- IF NOT VOTED & ACTIVE OR EDITING -->
+              <div v-else-if="(poll.status === 'active' && !hasVoted) || isEditingVote" class="voting-form">
+                <div v-if="isEditingVote" class="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm">
+                  Anda sedang mengubah pilihan. Pilihan sebelumnya akan dihapus setelah Anda mengirim pilihan baru.
+                </div>
+
                 <p class="instruction">
                    Pilih <strong>{{ poll.questionType === 'multiple_choice' ? 'satu atau lebih' : 'satu' }}</strong> opsi berikut:
                 </p>
@@ -270,10 +296,17 @@ const getOptionLabel = (optionId: string) => {
                 <div class="form-actions">
                   <button 
                     @click="submitVote"
-                    class="btn btn-primary w-full"
+                    class="btn btn-primary w-full mb-2"
                     :disabled="selectedOptions.length === 0 || isSubmitting"
                   >
-                    {{ isSubmitting ? 'Mengirim...' : 'Kirim Jawaban' }}
+                    {{ isSubmitting ? 'Mengirim...' : (isEditingVote ? 'Simpan Perubahan' : 'Kirim Jawaban') }}
+                  </button>
+                  <button 
+                    v-if="isEditingVote" 
+                    @click="cancelEdit" 
+                    class="btn btn-secondary w-full"
+                  >
+                    Batal
                   </button>
                   <p v-if="poll.isAnonymous" class="anon-text">🔒 Voting ini bersifat anonim</p>
                 </div>
@@ -341,7 +374,7 @@ const getOptionLabel = (optionId: string) => {
               </template>
 
               <!-- IF VOTED -->
-              <div v-if="hasVoted" class="voted-state">
+              <div v-if="hasVoted && !isEditingVote" class="voted-state">
                 <div class="success-icon">
                   <CheckCircle :size="48" />
                 </div>
@@ -355,10 +388,20 @@ const getOptionLabel = (optionId: string) => {
                      </span>
                   </div>
                 </div>
+
+                <div v-if="poll.allowEditVote && poll.status === 'active'" class="mt-4">
+                  <button @click="startEditing" class="btn btn-outline btn-sm">
+                    Ubah Pilihan
+                  </button>
+                </div>
               </div>
 
-              <!-- IF NOT VOTED & ACTIVE -->
-              <div v-else-if="poll.status === 'active'" class="voting-form">
+              <!-- IF NOT VOTED & ACTIVE OR EDITING -->
+              <div v-else-if="(poll.status === 'active' && !hasVoted) || isEditingVote" class="voting-form">
+                <div v-if="isEditingVote" class="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm">
+                  Anda sedang mengubah pilihan.
+                </div>
+
                 <p class="instruction">
                    Pilih <strong>{{ poll.questionType === 'multiple_choice' ? 'satu atau lebih' : 'satu' }}</strong> opsi berikut:
                 </p>
@@ -384,10 +427,17 @@ const getOptionLabel = (optionId: string) => {
                 <div class="form-actions">
                   <button 
                     @click="submitVote"
-                    class="btn btn-primary w-full"
+                    class="btn btn-primary w-full mb-2"
                     :disabled="selectedOptions.length === 0 || isSubmitting"
                   >
-                    {{ isSubmitting ? 'Mengirim...' : 'Kirim Jawaban' }}
+                    {{ isSubmitting ? 'Mengirim...' : (isEditingVote ? 'Simpan Perubahan' : 'Kirim Jawaban') }}
+                  </button>
+                  <button 
+                    v-if="isEditingVote" 
+                    @click="cancelEdit" 
+                    class="btn btn-secondary w-full"
+                  >
+                    Batal
                   </button>
                   <p v-if="poll.isAnonymous" class="anon-text">🔒 Voting ini bersifat anonim</p>
                 </div>

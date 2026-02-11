@@ -346,6 +346,12 @@ const getStatusLabel = (status: string) => {
                 
                 <div class="action-spacer"></div>
 
+                <button @click="router.push(`/admin/finance/create-from-poll/${pollId}`)" class="btn btn-primary w-full">
+                  <DollarSign :size="16" /> Konversi ke Pembayaran
+                </button>
+
+                <div class="action-spacer"></div>
+
                 <button 
                   v-if="poll.status === 'active'"
                   @click="handleStatusChange('closed')"
@@ -608,11 +614,12 @@ const getStatusLabel = (status: string) => {
 
 .voter-table {
   width: 100%;
+  border-collapse: separate; /* Changed to separate for border-radius support if needed, or keep collapse */
   border-collapse: collapse;
 }
 
 .voter-table th {
-  padding: 10px 14px;
+  padding: 12px 16px;
   text-align: left;
   font-size: var(--text-xs);
   font-weight: 600;
@@ -620,14 +627,23 @@ const getStatusLabel = (status: string) => {
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
   background: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border);
 }
 
 .voter-table td {
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: var(--text-sm);
   color: var(--color-text-primary);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Zebra striping for better readability on long lists */
+.voter-table tbody tr:nth-child(even) {
+    background-color: #fafafa; /* Very light gray */
+}
+
+.voter-table tbody tr:hover {
+    background-color: #f3f4f6;
 }
 
 .option-tag {

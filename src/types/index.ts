@@ -50,6 +50,7 @@ export interface Poll {
   startDate: string; // ISO String
   endDate: string; // ISO String
   resultVisibility: 'always' | 'after_vote' | 'after_close';
+  allowEditVote?: boolean;
   status: 'draft' | 'active' | 'closed' | 'archived';
   createdAt: string;
   createdBy: string;
@@ -169,4 +170,5 @@ export interface PaymentRecord {
   lastPaymentDate?: string;
   notes?: string;
   createdAt: string;
+  billAmount?: number; // Optional override for variable pricing
 }

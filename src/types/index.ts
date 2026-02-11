@@ -146,4 +146,27 @@ export interface Database {
   events: Event[];
   attendanceEvents: AttendanceEvent[];
   attendanceCheckins: AttendanceCheckin[];
+  paymentItems: PaymentItem[];
+}
+
+export interface PaymentItem {
+  id: string;
+  title: string;
+  deadlineDate: string; // YYYY-MM-DD
+  type: 'dp' | 'full';
+  amount: number;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface PaymentRecord {
+  id: string;
+  paymentItemId: string;
+  memberId: string;
+  amountPaid: number;
+  status: 'unpaid' | 'partial' | 'paid';
+  lastPaymentDate?: string;
+  notes?: string;
+  createdAt: string;
 }

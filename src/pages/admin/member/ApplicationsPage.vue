@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import AppShell from '../../components/AppShell.vue';
-import EmptyState from '../../components/EmptyState.vue';
-import BaseSelect from '../../components/BaseSelect.vue';
-import { useApplicationsStore } from '../../stores/applications';
-import { useAuthStore } from '../../stores/auth';
-import { useUIStore } from '../../stores/ui';
+import AppShell from '../../../components/AppShell.vue';
+import EmptyState from '../../../components/EmptyState.vue';
+import BaseSelect from '../../../components/BaseSelect.vue';
+import { useApplicationsStore } from '../../../stores/applications';
+import { useAuthStore } from '../../../stores/auth';
+import { useUIStore } from '../../../stores/ui';
 import { CheckCircle, XCircle } from 'lucide-vue-next';
 
 const applicationsStore = useApplicationsStore();

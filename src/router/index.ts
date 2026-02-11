@@ -37,25 +37,37 @@ const router = createRouter({
         {
             path: '/admin/members/list',
             name: 'MembersList',
-            component: () => import('../pages/admin/MembersListPage.vue'),
+            component: () => import('../pages/admin/member/MembersListPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {
             path: '/admin/members/applications',
             name: 'MembersApplications',
-            component: () => import('../pages/admin/ApplicationsPage.vue'),
+            component: () => import('../pages/admin/member/ApplicationsPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {
             path: '/admin/finance/ledger',
             name: 'FinanceLedger',
-            component: () => import('../pages/admin/FinanceLedgerPage.vue'),
+            component: () => import('../pages/admin/finance/FinanceLedgerPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {
             path: '/admin/finance/kas',
             name: 'FinanceKas',
-            component: () => import('../pages/admin/KasPage.vue'),
+            component: () => import('../pages/admin/finance/KasPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/finance/payments',
+            name: 'FinancePayments',
+            component: () => import('../pages/admin/finance/PaymentItemsPage.vue'),
+            meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+            path: '/admin/finance/payments/:id',
+            name: 'FinancePaymentDetail',
+            component: () => import('../pages/admin/finance/PaymentDetailPage.vue'),
             meta: { requiresAuth: true, requiresAdmin: true }
         },
         {

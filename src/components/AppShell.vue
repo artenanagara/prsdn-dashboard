@@ -52,7 +52,8 @@ const adminNavItems = [
     icon: DollarSign,
     children: [
       { path: '/admin/finance/ledger', label: 'Transaksi' },
-      { path: '/admin/finance/kas', label: 'Kas Online' }
+      { path: '/admin/finance/kas', label: 'Kas Online' },
+      { path: '/admin/finance/payments', label: 'Pembayaran' }
     ]
   },
   { path: '/admin/attendance-events', label: 'Absensi', icon: ClipboardCheck },

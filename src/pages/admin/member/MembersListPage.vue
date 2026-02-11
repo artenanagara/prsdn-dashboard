@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import AppShell from '../../components/AppShell.vue';
-import { useMembersStore } from '../../stores/members';
-import { useUIStore } from '../../stores/ui';
+import AppShell from '../../../components/AppShell.vue';
+import { useMembersStore } from '../../../stores/members';
+import { useUIStore } from '../../../stores/ui';
 import {
   Trash2,
   Eye,
   Edit,
 } from 'lucide-vue-next';
-import { supabase } from '../../lib/supabase';
-import BaseCard from '../../components/BaseCard.vue';
-import BaseDatePicker from '../../components/BaseDatePicker.vue';
-import BaseSelect from '../../components/BaseSelect.vue';
+import { supabase } from '../../../lib/supabase';
+import BaseCard from '../../../components/BaseCard.vue';
+import BaseDatePicker from '../../../components/BaseDatePicker.vue';
+import BaseSelect from '../../../components/BaseSelect.vue';
 
 const membersStore = useMembersStore();
 const uiStore = useUIStore();

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import AppShell from '../../components/AppShell.vue';
-import { useKasStore } from '../../stores/kas';
-import { useMembersStore } from '../../stores/members';
-import { useFinanceStore } from '../../stores/finance';
-import { useUIStore } from '../../stores/ui';
+import AppShell from '../../../components/AppShell.vue';
+import { useKasStore } from '../../../stores/kas';
+import { useMembersStore } from '../../../stores/members';
+import { useFinanceStore } from '../../../stores/finance';
+import { useUIStore } from '../../../stores/ui';
 import { Save, ChevronRight } from 'lucide-vue-next';
-import BaseSelect from '../../components/BaseSelect.vue';
+import BaseSelect from '../../../components/BaseSelect.vue';
 
 const kasStore = useKasStore();
 const membersStore = useMembersStore();
@@ -206,8 +206,8 @@ onMounted(async () => {
     financeStore.subscribeToChanges();
 });
 
-import BaseCard from '../../components/BaseCard.vue';
-import EmptyState from '../../components/EmptyState.vue';
+import BaseCard from '../../../components/BaseCard.vue';
+import EmptyState from '../../../components/EmptyState.vue';
 
 const saveMonthPayments = async () => {
   if (!selectedMonthKey.value) return;

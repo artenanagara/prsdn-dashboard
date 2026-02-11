@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import AppShell from '../../components/AppShell.vue';
-import BaseCard from '../../components/BaseCard.vue';
-import BaseDatePicker from '../../components/BaseDatePicker.vue';
-import CardStat from '../../components/CardStat.vue';
-import EmptyState from '../../components/EmptyState.vue';
-import { useFinanceStore } from '../../stores/finance';
-import { useUIStore } from '../../stores/ui';
+import AppShell from '../../../components/AppShell.vue';
+import BaseCard from '../../../components/BaseCard.vue';
+import BaseDatePicker from '../../../components/BaseDatePicker.vue';
+import CardStat from '../../../components/CardStat.vue';
+import EmptyState from '../../../components/EmptyState.vue';
+import { useFinanceStore } from '../../../stores/finance';
+import { useUIStore } from '../../../stores/ui';
 import { Plus, Edit, Trash2 } from 'lucide-vue-next';
-import BaseSelect from '../../components/BaseSelect.vue';
-import BaseDateRangePicker from '../../components/BaseDateRangePicker.vue';
+import BaseSelect from '../../../components/BaseSelect.vue';
+import BaseDateRangePicker from '../../../components/BaseDateRangePicker.vue';
 
 const financeStore = useFinanceStore();
 const uiStore = useUIStore();

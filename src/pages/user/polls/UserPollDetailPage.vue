@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, onUnmounted, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePollsStore } from '../../../stores/polls';
+import { useUIStore } from '../../../stores/ui';
 import AppShell from '../../../components/AppShell.vue';
 import BaseCard from '../../../components/BaseCard.vue';
 import { ArrowLeft, CheckCircle, Lock, ChevronDown, ChevronUp } from 'lucide-vue-next';
@@ -12,6 +13,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tool
 
 const route = useRoute();
 const pollsStore = usePollsStore();
+const uiStore = useUIStore();
 const pollId = route.params.id as string;
 
 // State
@@ -133,7 +135,15 @@ const handleOptionSelect = (optionId: string, isMultiple: boolean) => {
 
 const submitVote = async () => {
   if (selectedOptions.value.length === 0) return;
-  if (!confirm('Apakah Anda yakin dengan pilihan ini? Pilihan tidak dapat diubah.')) return;
+  
+  const confirmed = await uiStore.confirm({
+    title: 'Konfirmasi Pilihan',
+    message: 'Apakah Anda yakin dengan pilihan ini? Pilihan tidak dapat diubah.',
+    confirmText: 'Ya, Kirim',
+    variant: 'primary'
+  });
+
+  if (!confirmed) return;
 
   isSubmitting.value = true;
   await pollsStore.submitVote(pollId, selectedOptions.value);

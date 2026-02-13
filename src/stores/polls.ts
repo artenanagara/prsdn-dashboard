@@ -272,14 +272,19 @@ export const usePollsStore = defineStore('polls', () => {
 
         try {
             // If editing is allowed and user voted, delete old votes first
-            if (alreadyVoted && poll?.allowEditVote && authStore.currentUser?.userId) {
+            // If editing is allowed, ALWAYS try to delete old votes first to prevent duplicates
+            // We verify `allowEditVote` and `userId` existence.
+            if (poll?.allowEditVote && authStore.currentUser?.userId) {
                 const { error: deleteError } = await (supabase as any)
                     .from('poll_votes')
                     .delete()
                     .eq('poll_id', pollId)
                     .eq('user_id', authStore.currentUser.userId);
 
-                if (deleteError) throw deleteError;
+                if (deleteError) {
+                    console.error("Delete error:", deleteError);
+                    throw deleteError;
+                }
             }
 
             const votes = optionIds.map(optId => ({

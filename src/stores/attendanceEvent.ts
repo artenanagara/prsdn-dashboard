@@ -172,6 +172,8 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
 
             if (error) throw error;
 
+
+
             await loadEvents();
             return true;
         } catch (error) {

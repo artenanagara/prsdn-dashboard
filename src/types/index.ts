@@ -38,6 +38,8 @@ export interface UserAccount {
   createdAt: string;
 }
 
+
+
 // Voting Feature Interfaces
 export interface Poll {
   id: string;
@@ -148,6 +150,7 @@ export interface Database {
   attendanceEvents: AttendanceEvent[];
   attendanceCheckins: AttendanceCheckin[];
   paymentItems: PaymentItem[];
+
 }
 
 export interface PaymentItem {

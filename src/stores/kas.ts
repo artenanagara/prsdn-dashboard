@@ -124,6 +124,9 @@ export const useKasStore = defineStore('kas', () => {
                 });
             }
 
+            // 4. Send Notifications for new payments
+
+
         } catch (error) {
             console.error('Error saving month payments:', error);
             throw error; // Propagate error to caller

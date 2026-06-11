@@ -59,7 +59,7 @@ const voterDetails = computed(() => pollsStore.voterDetails);
 
 const usesPieChart = computed(() => options.value.length <= 2);
 
-const chartColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const chartColors = ['#0f6f8f', '#ef4444', '#10b981', '#f59e0b', '#16a6d1', '#e11d48', '#06b6d4', '#84cc16'];
 
 // Chart Data
 const barChartData = computed(() => {
@@ -523,8 +523,8 @@ const getStatusLabel = (status: string) => {
   padding: 8px;
   border-radius: var(--radius-md);
 }
-.stat-icon.blue { background: #dbeafe; color: #2563eb; }
-.stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+.stat-icon.blue { background: #e6f7fb; color: #0f6f8f; }
+.stat-icon.purple { background: #eef9ff; color: #0284c7; }
 
 .stat-label {
   font-size: var(--text-xs);
@@ -545,7 +545,7 @@ const getStatusLabel = (status: string) => {
   gap: 4px;
 }
 .type-badge.voting { color: var(--color-primary); }
-.type-badge.polling { color: #8b5cf6; }
+.type-badge.polling { color: #0284c7; }
 
 .poll-main-title {
   font-size: var(--text-xl);

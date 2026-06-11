@@ -89,16 +89,17 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2);
-  border: none;
+  padding: 0.4rem 0.55rem 0.4rem 0.8rem;
+  border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   border-radius: var(--radius-md);
-  transition: background-color var(--transition-base);
+  transition: all var(--transition-base);
 }
 
 .dropdown-trigger:hover {
-  background-color: var(--color-bg);
+  background-color: #f7fafc;
+  border-color: var(--color-border);
 }
 
 .user-info {
@@ -122,10 +123,12 @@ onUnmounted(() => {
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
   object-fit: cover;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .chevron-icon {
@@ -145,7 +148,7 @@ onUnmounted(() => {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   padding: var(--space-2);
   z-index: 1000;
 }
@@ -169,7 +172,8 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background-color: var(--color-bg);
+  background-color: #f4f8fa;
+  color: var(--color-primary-hover);
 }
 
 .dropdown-item-danger {

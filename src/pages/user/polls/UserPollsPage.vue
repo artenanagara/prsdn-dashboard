@@ -224,7 +224,7 @@ const navigateToDetail = (id: string) => {
   color: var(--color-text-tertiary);
 }
 .type-badge.voting { color: var(--color-primary); }
-.type-badge.polling { color: #8b5cf6; }
+.type-badge.polling { color: #0284c7; }
 
 .status-badge-inline {
   font-size: 10px;

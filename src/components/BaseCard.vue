@@ -17,7 +17,10 @@ withDefaults(defineProps<Props>(), {
 <template>
   <div :class="['card', `card-${variant}`, { 'no-padding': noPadding }]">
     <div v-if="title || $slots.header" class="card-header">
-      <h3 v-if="title" class="card-title">{{ title }}</h3>
+      <div class="card-heading">
+        <span v-if="title" class="card-accent"></span>
+        <h3 v-if="title" class="card-title">{{ title }}</h3>
+      </div>
       <slot name="header"></slot>
     </div>
     
@@ -34,17 +37,16 @@ withDefaults(defineProps<Props>(), {
 <style scoped>
 /* Base Styles from global CSS are strictly enforced here */
 .card {
-  background-color: #ffffff; /* Explicit white to be safe */
-  background-color: var(--color-surface);
+  background: #ffffff;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(16px);
   transition: all var(--transition-base);
-  /* Removed height: 100% to allow "hug content" behavior by default */
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden; /* Back to hidden by default for visual integrity */
+  overflow: hidden;
 }
 
 /* New class to allow overflow when needed (e.g. for simple selects that don't use teleport) */
@@ -58,7 +60,21 @@ withDefaults(defineProps<Props>(), {
 
 .card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+}
+
+.card-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.card-accent {
+  width: 4px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--gradient-primary);
+  box-shadow: 0 0 0 4px rgba(15, 111, 143, 0.07);
 }
 
 .card-body {
@@ -87,7 +103,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .card-header {
-  padding: var(--space-6) var(--space-6) var(--space-4) var(--space-6);
+  padding: var(--space-5) var(--space-6) var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border-light);
   display: flex;
   justify-content: space-between;
@@ -97,24 +113,24 @@ withDefaults(defineProps<Props>(), {
 }
 
 .card-title {
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-ink);
   margin: 0;
 }
 
 .card-footer {
   padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--color-border-light);
-  background-color: var(--color-bg-secondary);
+  background-color: #f8fafb;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
 }
 
 /* Variants */
-.card-primary { border-top: 4px solid var(--color-primary); }
-.card-success { border-top: 4px solid var(--color-success); }
-.card-warning { border-top: 4px solid var(--color-warning); }
-.card-danger { border-top: 4px solid var(--color-danger); }
+.card-primary { border-top: 3px solid var(--color-primary); }
+.card-success { border-top: 3px solid var(--color-success); }
+.card-warning { border-top: 3px solid var(--color-warning); }
+.card-danger { border-top: 3px solid var(--color-danger); }
 
 </style>

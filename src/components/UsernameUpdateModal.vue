@@ -56,8 +56,8 @@ const navigateToSettings = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background-color: rgba(8, 17, 31, 0.52);
+  backdrop-filter: blur(8px);
   z-index: 10000;
   display: flex;
   align-items: center;
@@ -68,7 +68,8 @@ const navigateToSettings = () => {
 .modal-container {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   max-width: 480px;
   width: 100%;
   animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -96,14 +97,14 @@ const navigateToSettings = () => {
 .modal-icon {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #e6f7fb 0%, #20b7d8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e40af;
+  color: #0a4f6d;
   margin-bottom: var(--space-6);
-  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 24px rgba(15, 111, 143, 0.22);
 }
 
 .modal-title {
@@ -123,7 +124,8 @@ const navigateToSettings = () => {
 
 .requirements-box {
   width: 100%;
-  background: var(--color-bg-secondary);
+  background: #f7fafc;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   margin-bottom: var(--space-5);

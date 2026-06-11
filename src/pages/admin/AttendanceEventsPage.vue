@@ -9,7 +9,7 @@ import { useCheckinStore } from '../../stores/checkin';
 import { useMembersStore } from '../../stores/members';
 import { useAuthStore } from '../../stores/auth';
 import { useUIStore } from '../../stores/ui';
-import { Plus, Play, Square, RefreshCw, Trash2, Users } from 'lucide-vue-next';
+import { Plus, Play, Square, RefreshCw, Trash2, Users, CalendarDays, Clock3, ShieldCheck, ListChecks } from 'lucide-vue-next';
 import TimePicker from '../../components/TimePicker.vue';
 import BaseSelect from '../../components/BaseSelect.vue';
 
@@ -47,10 +47,52 @@ onMounted(async () => {
   eventStore.subscribeToChanges();
   await checkinStore.loadCheckins();
   checkinStore.subscribeToChanges();
-  membersStore.loadMembers();
+  membersStore.loadMembers(false);
 });
 
 const activeEvent = computed(() => eventStore.activeEvent);
+
+const activeCheckinCount = computed(() => {
+  if (!activeEvent.value) return 0;
+  return checkinStore.getCheckinsByEvent(activeEvent.value.id).length;
+});
+
+const activeEventCheckins = computed(() => {
+  if (!activeEvent.value) return [];
+  return checkinStore.getCheckinsByEvent(activeEvent.value.id)
+    .map(c => {
+      const member = membersStore.getMemberById(c.memberId);
+      return {
+        ...c,
+        memberName: member?.fullName || 'Anggota tidak ditemukan',
+        rt: member?.rt || '-'
+      };
+    })
+    .sort((a, b) => Number(b.checkedInAt) - Number(a.checkedInAt));
+});
+
+const attendanceOverview = computed(() => {
+  const total = membersStore.totalMembers;
+  const attended = activeCheckinCount.value;
+  const absent = Math.max(total - attended, 0);
+  const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
+
+  return { total, attended, absent, percentage };
+});
+
+const recentActiveCheckins = computed(() => activeEventCheckins.value.slice(0, 5));
+
+const rtAttendanceSummary = computed(() => {
+  const attendedMemberIds = new Set(activeEventCheckins.value.map(c => c.memberId));
+  return ['01', '02', '03', '04'].map(rt => {
+    const members = membersStore.members.filter(member => member.rt === rt);
+    const attended = members.filter(member => attendedMemberIds.has(member.id)).length;
+    const total = members.length;
+    const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
+
+    return { rt, attended, total, percentage };
+  });
+});
 
 const selectedEvent = computed(() => {
   if (!selectedEventId.value) return null;
@@ -144,8 +186,14 @@ const handleDeactivate = (eventId: string) => {
 const handleGenerateToken = async (eventId: string) => {
   const result = await eventStore.generateEventToken(eventId);
   if (result) {
-    uiStore.showToast(`Token baru: ${result.token}`, 'success');
+    uiStore.showToast(`Token baru berhasil dibuat: ${result.token}`, 'success');
+  } else {
+    uiStore.showToast('Token hanya bisa dibuat ulang untuk event aktif.', 'warning');
   }
+};
+
+const getEventCheckinCount = (eventId: string) => {
+  return checkinStore.getCheckinsByEvent(eventId).length;
 };
 
 const handleDelete = async (eventId: string, title: string) => {
@@ -191,21 +239,50 @@ const formatDateTime = (timestamp: number) => {
     minute: '2-digit'
   });
 };
+
+const formatShortTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 </script>
 
 <template>
   <AppShell pageTitle="Kelola Absensi" pageSubtitle="Buat dan kelola event absensi">
     <div class="attendance-events-page">
-      <div class="controls-bar">
-        <div class="controls-wrapper">
-          <div class="filters-group">
-            <h3 class="font-bold text-lg">Semua Event</h3>
+      <div class="attendance-toolbar">
+        <div>
+          <p class="section-kicker">Absensi berbasis token</p>
+          <h3>Kelola sesi kehadiran</h3>
+          <p>Aktifkan satu event, bagikan token, lalu generate ulang jika waktu token habis.</p>
+        </div>
+        <button @click="showCreateModal = true" class="btn btn-primary">
+          <Plus :size="18" />
+          <span>Buat Event</span>
+        </button>
+      </div>
+
+      <div class="flow-grid">
+        <div class="flow-step is-active">
+          <span class="step-number">1</span>
+          <div>
+            <strong>Pilih event</strong>
+            <p>Aktifkan event yang sedang berlangsung.</p>
           </div>
-          <div class="actions-group">
-            <button @click="showCreateModal = true" class="btn btn-primary">
-              <Plus :size="18" />
-              <span>Buat Event</span>
-            </button>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">2</span>
+          <div>
+            <strong>Bagikan token</strong>
+            <p>Token berlaku singkat dan bisa dibuat ulang.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">3</span>
+          <div>
+            <strong>Pantau peserta</strong>
+            <p>Lihat siapa saja yang sudah hadir.</p>
           </div>
         </div>
       </div>
@@ -214,39 +291,115 @@ const formatDateTime = (timestamp: number) => {
       <div v-if="activeEvent" class="card mb-6 active-event-card">
         <div class="card-body">
           <div class="active-event-header">
-            <h3>Event Aktif</h3>
-            <span class="badge badge-success">Active</span>
+            <div>
+              <p class="section-kicker">Event aktif</p>
+              <h3>{{ activeEvent.title }}</h3>
+            </div>
+            <span class="badge badge-success">Sedang Berjalan</span>
           </div>
           <div class="active-event-content">
             <div class="event-info">
-              <h2>{{ activeEvent.title }}</h2>
               <p v-if="activeEvent.description" class="text-secondary">{{ activeEvent.description }}</p>
-              <div class="event-meta">
-                <span>📅 {{ formatDate(activeEvent.date) }}</span>
-                <span v-if="activeEvent.startTime">🕐 {{ formatTime(activeEvent.startTime) }} - {{ formatTime(activeEvent.endTime) }}</span>
+              <div class="event-meta-grid">
+                <div class="meta-item">
+                  <CalendarDays :size="18" />
+                  <span>{{ formatDate(activeEvent.date) }}</span>
+                </div>
+                <div class="meta-item">
+                  <Clock3 :size="18" />
+                  <span>{{ activeEvent.startTime ? `${formatTime(activeEvent.startTime)} - ${formatTime(activeEvent.endTime)}` : 'Waktu fleksibel' }}</span>
+                </div>
+                <div class="meta-item">
+                  <ListChecks :size="18" />
+                  <span>{{ activeCheckinCount }} peserta hadir</span>
+                </div>
+              </div>
+
+              <div class="attendance-overview-grid">
+                <div class="overview-card primary">
+                  <span>Hadir</span>
+                  <strong>{{ attendanceOverview.attended }}</strong>
+                </div>
+                <div class="overview-card">
+                  <span>Belum Hadir</span>
+                  <strong>{{ attendanceOverview.absent }}</strong>
+                </div>
+                <div class="overview-card">
+                  <span>Kehadiran</span>
+                  <strong>{{ attendanceOverview.percentage }}%</strong>
+                </div>
+                <div class="overview-card">
+                  <span>Total Anggota</span>
+                  <strong>{{ attendanceOverview.total }}</strong>
+                </div>
+              </div>
+
+              <div class="attendance-monitor-grid">
+                <div class="monitor-panel">
+                  <div class="panel-heading">
+                    <h4>Peserta Terbaru</h4>
+                    <span>{{ recentActiveCheckins.length }} terakhir</span>
+                  </div>
+                  <div v-if="recentActiveCheckins.length > 0" class="recent-list">
+                    <div v-for="checkin in recentActiveCheckins" :key="checkin.id" class="recent-item">
+                      <div class="recent-avatar">{{ checkin.memberName.charAt(0).toUpperCase() }}</div>
+                      <div class="recent-info">
+                        <strong>{{ checkin.memberName }}</strong>
+                        <span>RT {{ checkin.rt }} · {{ formatShortTime(checkin.checkedInAt) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="compact-empty">
+                    Belum ada peserta yang absen.
+                  </div>
+                </div>
+
+                <div class="monitor-panel">
+                  <div class="panel-heading">
+                    <h4>Rekap per RT</h4>
+                    <span>{{ attendanceOverview.attended }}/{{ attendanceOverview.total }}</span>
+                  </div>
+                  <div class="rt-list">
+                    <div v-for="item in rtAttendanceSummary" :key="item.rt" class="rt-item">
+                      <div class="rt-row">
+                        <strong>RT {{ item.rt }}</strong>
+                        <span>{{ item.attended }}/{{ item.total }}</span>
+                      </div>
+                      <div class="rt-progress">
+                        <span :style="{ width: `${item.percentage}%` }"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="token-section">
               <div v-if="activeEvent.token" class="token-display">
-                <label>Token:</label>
-                <div class="token-value">{{ activeEvent.token }}</div>
-                <CountdownTimer :expiresAt="activeEvent.tokenExpiresAt" />
+                <div class="token-label-row">
+                  <span>Token absensi</span>
+                  <span class="token-timer">
+                    <CountdownTimer :expiresAt="activeEvent.tokenExpiresAt" />
+                  </span>
+                </div>
+                <div class="token-value" aria-label="Token absensi">{{ activeEvent.token }}</div>
+                <p>Bagikan token ini ke peserta. Jika habis, klik generate ulang.</p>
               </div>
               <div v-else class="token-empty">
-                <p class="text-secondary">Belum ada token aktif</p>
+                <ShieldCheck :size="28" />
+                <p class="text-secondary">Belum ada token aktif untuk event ini.</p>
               </div>
               <div class="token-actions">
                 <button @click="handleGenerateToken(activeEvent.id)" class="btn btn-primary">
                   <RefreshCw :size="18" />
-                  <span>{{ activeEvent.token ? 'Regenerate' : 'Generate' }} Token</span>
+                  <span>{{ activeEvent.token ? 'Generate Ulang Token' : 'Generate Token' }}</span>
                 </button>
                 <button @click="handleDeactivate(activeEvent.id)" class="btn btn-secondary">
                   <Square :size="18" />
-                  <span>Deactivate</span>
+                  <span>Nonaktifkan</span>
                 </button>
                 <button @click="openDetail(activeEvent.id)" class="btn btn-secondary">
                   <Users :size="18" />
-                  <span>{{ checkinStore.getCheckinsByEvent(activeEvent.id).length }} Check-ins</span>
+                  <span>Lihat Peserta</span>
                 </button>
               </div>
             </div>
@@ -254,9 +407,13 @@ const formatDateTime = (timestamp: number) => {
         </div>
       </div>
 
-      <div v-else class="card mb-6">
-        <div class="card-body text-center">
-          <p class="text-secondary">Tidak ada event aktif saat ini</p>
+      <div v-else class="card mb-6 inactive-event-card">
+        <div class="card-body">
+          <div class="inactive-icon">
+            <ShieldCheck :size="28" />
+          </div>
+          <h3>Tidak ada event aktif</h3>
+          <p class="text-secondary">Aktifkan salah satu event di daftar bawah agar peserta bisa absen menggunakan token.</p>
         </div>
       </div>
 
@@ -271,7 +428,7 @@ const formatDateTime = (timestamp: number) => {
                   <th>Tanggal</th>
                   <th>Waktu</th>
                   <th>Status</th>
-                  <th>Check-ins</th>
+                  <th>Hadir</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -285,13 +442,13 @@ const formatDateTime = (timestamp: number) => {
                   <td class="text-sm">{{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}</td>
                   <td>
                     <span :class="['badge', event.isActive ? 'badge-success' : 'badge-secondary']">
-                      {{ event.isActive ? 'Active' : 'Inactive' }}
+                      {{ event.isActive ? 'Aktif' : 'Nonaktif' }}
                     </span>
                   </td>
                   <td>
                     <button @click="openDetail(event.id)" class="btn btn-sm btn-secondary">
                       <Users :size="16" />
-                      <span>{{ checkinStore.getCheckinsByEvent(event.id).length }}</span>
+                      <span>{{ getEventCheckinCount(event.id) }}</span>
                     </button>
                   </td>
                   <td>
@@ -299,19 +456,22 @@ const formatDateTime = (timestamp: number) => {
                       <button
                         v-if="!event.isActive"
                         @click="handleActivate(event.id)"
-                        class="btn btn-sm"
-                        style="background-color: var(--color-success); color: white;"
+                        class="btn btn-sm btn-success"
+                        title="Aktifkan event"
                       >
                         <Play :size="16" />
+                        <span>Aktifkan</span>
                       </button>
                       <button
                         v-if="event.isActive"
                         @click="handleGenerateToken(event.id)"
                         class="btn btn-primary btn-sm"
+                        title="Generate ulang token"
                       >
                         <RefreshCw :size="16" />
+                        <span>Token</span>
                       </button>
-                      <button @click="handleDelete(event.id, event.title)" class="btn btn-danger btn-sm">
+                      <button @click="handleDelete(event.id, event.title)" class="btn btn-danger btn-sm" title="Hapus event">
                         <Trash2 :size="16" />
                       </button>
                     </div>
@@ -379,9 +539,15 @@ const formatDateTime = (timestamp: number) => {
           <div class="modal-body">
             <div class="event-detail-info mb-6">
               <p v-if="selectedEvent.description" class="text-secondary mb-4">{{ selectedEvent.description }}</p>
-              <div class="event-meta">
-                <span>📅 {{ formatDate(selectedEvent.date) }}</span>
-                <span v-if="selectedEvent.startTime">🕐 {{ formatTime(selectedEvent.startTime) }} - {{ formatTime(selectedEvent.endTime) }}</span>
+              <div class="event-detail-meta">
+                <div class="meta-item">
+                  <CalendarDays :size="18" />
+                  <span>{{ formatDate(selectedEvent.date) }}</span>
+                </div>
+                <div class="meta-item">
+                  <Clock3 :size="18" />
+                  <span>{{ selectedEvent.startTime ? `${formatTime(selectedEvent.startTime)} - ${formatTime(selectedEvent.endTime)}` : 'Waktu fleksibel' }}</span>
+                </div>
               </div>
             </div>
 
@@ -422,7 +588,7 @@ const formatDateTime = (timestamp: number) => {
                     <td class="font-medium">{{ checkin.memberName }}</td>
                     <td><span class="badge badge-secondary">RT {{ checkin.rt }}</span></td>
                     <td class="text-sm">{{ formatDateTime(checkin.checkedInAt) }}</td>
-                    <td class="text-sm font-mono">{{ checkin.tokenUsed }}</td>
+                    <td class="text-sm token-used">{{ checkin.tokenUsed }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -442,21 +608,95 @@ const formatDateTime = (timestamp: number) => {
 <style scoped>
 .attendance-events-page {
   max-width: 1400px;
-}
-
-.page-header {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-4);
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-.page-header h1 {
-  margin-bottom: var(--space-2);
+.attendance-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.attendance-toolbar h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-ink);
+}
+
+.attendance-toolbar p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.section-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.flow-step.is-active {
+  border-color: rgba(15, 111, 143, 0.22);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.08), #ffffff);
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--gradient-primary);
+  font-weight: 800;
+  font-size: var(--text-xs);
+}
+
+.flow-step strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.flow-step p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
 }
 
 .active-event-card {
-  margin-bottom: var(--space-6);
+  margin-bottom: 0;
+  border-color: rgba(15, 111, 143, 0.22);
 }
 
 .events-list-card {
@@ -477,79 +717,348 @@ thead {
 .active-event-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-6);
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.active-event-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--color-ink);
 }
 
 .active-event-content {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-8);
-  align-items: start;
-}
-
-.event-info h2 {
-  margin-bottom: var(--space-2);
-}
-
-.event-meta {
-  display: flex;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--space-6);
-  margin-top: var(--space-4);
+  align-items: stretch;
+}
+
+.event-info {
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: #f8fbfc;
+  border: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.event-info > p {
+  margin: 0;
+}
+
+.event-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: #ffffff;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+}
+
+.attendance-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.overview-card {
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+  background: #ffffff;
+  box-shadow: var(--shadow-xs);
+}
+
+.overview-card.primary {
+  color: #ffffff;
+  background: var(--gradient-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 30px rgba(15, 111, 143, 0.16);
+}
+
+.overview-card span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.overview-card.primary span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.overview-card strong {
+  color: var(--color-ink);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.overview-card.primary strong {
+  color: #ffffff;
+}
+
+.attendance-monitor-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--space-4);
+}
+
+.monitor-panel {
+  min-height: 240px;
+  padding: var(--space-4);
+  background: #ffffff;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.panel-heading h4 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 0.98rem;
+}
+
+.panel-heading span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.recent-list,
+.rt-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: #f8fbfc;
+  border: 1px solid var(--color-border-light);
+}
+
+.recent-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--gradient-primary);
+  font-weight: 800;
+}
+
+.recent-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.recent-info strong {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-info span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.compact-empty {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px dashed #cad7e2;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.rt-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.rt-row strong {
+  color: var(--color-ink);
+}
+
+.rt-progress {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eef3;
+}
+
+.rt-progress span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: var(--gradient-primary);
+  transition: width var(--transition-base);
+}
+
+.event-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .token-section {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  min-width: 300px;
+  min-width: 0;
 }
 
 .token-display {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-6);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background: linear-gradient(135deg, #0a4f6d 0%, #0f6f8f 55%, #16a6d1 100%);
+  border-radius: var(--radius-xl);
+  color: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 111, 143, 0.22);
 }
 
-.token-display label {
+.token-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.token-timer {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .token-value {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-weight-bold);
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.3em;
-  color: var(--color-primary);
+  font-size: 2.3rem;
+  font-weight: 800;
+  font-family: inherit;
+  letter-spacing: 0.18em;
+  color: #ffffff;
   text-align: center;
   padding: var(--space-4);
-  background-color: var(--color-surface);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: var(--radius-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.token-display p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--text-xs);
+  text-align: center;
 }
 
 .token-empty {
   padding: var(--space-6);
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
+  background-color: #f8fbfc;
+  border: 1px dashed #cad7e2;
+  border-radius: var(--radius-xl);
   text-align: center;
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary);
 }
 
 .token-actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--space-3);
+}
+
+.inactive-event-card .card-body {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.inactive-event-card h3,
+.inactive-event-card p {
+  margin: 0;
+}
+
+.inactive-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xl);
+  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.12), rgba(32, 183, 216, 0.16));
 }
 
 .action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .filters {
@@ -565,7 +1074,8 @@ thead {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(8, 17, 31, 0.52);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center; /* Center vertically */
   justify-content: center;
@@ -616,17 +1126,33 @@ thead {
   border-bottom: 1px solid var(--color-border-light);
 }
 
-.font-mono {
-  font-family: 'Courier New', monospace;
+.token-used {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 768px) {
-  .page-header {
+  .attendance-toolbar {
     flex-direction: column;
+    align-items: stretch;
     gap: var(--space-4);
   }
 
+  .flow-grid {
+    grid-template-columns: 1fr;
+  }
+
   .active-event-content {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attendance-monitor-grid {
     grid-template-columns: 1fr;
   }
 
@@ -645,6 +1171,12 @@ thead {
   .filters .form-input,
   .filters .form-select {
     max-width: 100% !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .attendance-overview-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

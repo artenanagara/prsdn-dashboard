@@ -8,7 +8,7 @@ import EmptyState from '../../../components/EmptyState.vue';
 import BaseSelect from '../../../components/BaseSelect.vue';
 import { usePaymentStore } from '../../../stores/payment';
 import { useUIStore } from '../../../stores/ui';
-import { Plus, Edit, Trash2, Search } from 'lucide-vue-next';
+import { Plus, Edit, Trash2, Search, Wallet, CalendarDays, ListChecks, ArrowRight } from 'lucide-vue-next';
 
 const router = useRouter(); // Added router
 const paymentStore = usePaymentStore();
@@ -67,6 +67,15 @@ const filteredItems = computed(() => {
     const matchesType = filterType.value === 'all' || item.type === filterType.value;
     return matchesSearch && matchesType;
   });
+});
+
+const paymentSummary = computed(() => {
+  const totalItems = paymentStore.paymentItems.length;
+  const fullCount = paymentStore.paymentItems.filter(item => item.type === 'full').length;
+  const dpCount = paymentStore.paymentItems.filter(item => item.type === 'dp').length;
+  const totalNominal = paymentStore.paymentItems.reduce((sum, item) => sum + item.amount, 0);
+
+  return { totalItems, fullCount, dpCount, totalNominal };
 });
 
 const openAddModal = () => {
@@ -160,6 +169,65 @@ const formatDate = (dateString: string) => {
 <template>
   <AppShell pageTitle="Pembayaran" pageSubtitle="Kelola daftar pembayaran anggota">
     <div class="payment-page">
+      <div class="finance-flow-toolbar">
+        <div>
+          <p class="section-kicker">Pembayaran anggota</p>
+          <h3>Kelola tagihan dan cicilan</h3>
+          <p>Buat item pembayaran, buka detailnya, lalu catat pembayaran anggota.</p>
+        </div>
+        <button @click="openAddModal" class="btn btn-primary">
+          <Plus :size="18" />
+          <span>Tambah Pembayaran</span>
+        </button>
+      </div>
+
+      <div class="flow-grid">
+        <div class="flow-step is-active">
+          <span class="step-number">1</span>
+          <div>
+            <strong>Buat tagihan</strong>
+            <p>Tentukan nominal, tipe, dan batas waktu.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">2</span>
+          <div>
+            <strong>Catat pembayaran</strong>
+            <p>Buka detail untuk input bayar per anggota.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">3</span>
+          <div>
+            <strong>Pantau status</strong>
+            <p>Lihat lunas, sebagian, dan belum bayar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-grid mb-6">
+        <div class="summary-card-item primary">
+          <Wallet :size="20" />
+          <span>Total Nominal</span>
+          <strong>{{ formatCurrency(paymentSummary.totalNominal) }}</strong>
+        </div>
+        <div class="summary-card-item">
+          <ListChecks :size="20" />
+          <span>Item Pembayaran</span>
+          <strong>{{ paymentSummary.totalItems }}</strong>
+        </div>
+        <div class="summary-card-item">
+          <CalendarDays :size="20" />
+          <span>Full Payment</span>
+          <strong>{{ paymentSummary.fullCount }}</strong>
+        </div>
+        <div class="summary-card-item">
+          <Wallet :size="20" />
+          <span>DP / Cicilan</span>
+          <strong>{{ paymentSummary.dpCount }}</strong>
+        </div>
+      </div>
+
       <div class="controls-bar mb-6">
         <div class="controls-wrapper">
           <div class="filters-group">
@@ -183,13 +251,7 @@ const formatDate = (dateString: string) => {
               class="filter-select-md"
             />
           </div>
-
-          <div class="actions-group">
-            <button @click="openAddModal" class="btn btn-primary">
-              <Plus :size="18" />
-              <span>Tambah Pembayaran</span>
-            </button>
-          </div>
+          <div class="actions-group"></div>
         </div>
       </div>
 
@@ -241,11 +303,14 @@ const formatDate = (dateString: string) => {
                   <td class="text-sm text-secondary">{{ item.description || '-' }}</td>
                   <td>
                     <div class="action-buttons">
-                      <button @click="openEditModal(item)" class="btn btn-secondary btn-sm">
+                      <button @click.stop="openEditModal(item)" class="btn btn-secondary btn-sm">
                         <Edit :size="16" />
                       </button>
-                      <button @click="handleDelete(item.id, item.title)" class="btn btn-danger btn-sm">
+                      <button @click.stop="handleDelete(item.id, item.title)" class="btn btn-danger btn-sm">
                         <Trash2 :size="16" />
+                      </button>
+                      <button @click.stop="router.push(`/admin/finance/payments/${item.id}`)" class="btn btn-primary btn-sm">
+                        <ArrowRight :size="16" />
                       </button>
                     </div>
                   </td>
@@ -321,6 +386,143 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .payment-page {
   max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.finance-flow-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.finance-flow-toolbar h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 1.1rem;
+}
+
+.finance-flow-toolbar p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.section-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.flow-step.is-active {
+  border-color: rgba(15, 111, 143, 0.22);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.08), #ffffff);
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--gradient-primary);
+  font-weight: 800;
+  font-size: var(--text-xs);
+}
+
+.flow-step strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.flow-step p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.summary-card-item {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+  box-shadow: var(--shadow-xs);
+}
+
+.summary-card-item svg {
+  color: var(--color-primary);
+}
+
+.summary-card-item.primary {
+  color: #ffffff;
+  background: var(--gradient-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 30px rgba(15, 111, 143, 0.16);
+}
+
+.summary-card-item.primary svg {
+  color: #ffffff;
+}
+
+.summary-card-item span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.summary-card-item.primary span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.summary-card-item strong {
+  color: var(--color-ink);
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.summary-card-item.primary strong {
+  color: #ffffff;
 }
 
 .table-card {
@@ -395,6 +597,16 @@ const formatDate = (dateString: string) => {
 }
 
 @media (max-width: 768px) {
+  .finance-flow-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flow-grid,
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }

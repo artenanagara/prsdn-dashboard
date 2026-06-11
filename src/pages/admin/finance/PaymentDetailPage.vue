@@ -7,7 +7,7 @@ import BaseSelect from '../../../components/BaseSelect.vue';
 import { usePaymentStore } from '../../../stores/payment';
 import { useMembersStore } from '../../../stores/members';
 import { useUIStore } from '../../../stores/ui';
-import { ArrowLeft, CheckCircle, Search, DollarSign } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle, Search, DollarSign, Wallet, AlertCircle, ListChecks } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -127,6 +127,29 @@ const totalCollected = computed(() => {
     return paymentStore.currentPaymentRecords.reduce((sum, r) => sum + r.amountPaid, 0);
 });
 
+const paymentProgress = computed(() => {
+    const totalMembers = combinedData.value.length;
+    const paid = combinedData.value.filter(item => item.status === 'paid').length;
+    const partial = combinedData.value.filter(item => item.status === 'partial').length;
+    const unpaid = combinedData.value.filter(item => item.status === 'unpaid').length;
+    const totalBill = combinedData.value.reduce((sum, item) => sum + item.billAmount, 0);
+    const remaining = combinedData.value.reduce((sum, item) => sum + Math.max(item.remaining, 0), 0);
+    const percentage = totalBill > 0 ? Math.round((totalCollected.value / totalBill) * 100) : 0;
+
+    return { totalMembers, paid, partial, unpaid, totalBill, remaining, percentage };
+});
+
+const rtPaymentSummary = computed(() => {
+    return ['01', '02', '03', '04'].map(rt => {
+        const items = combinedData.value.filter(item => item.member.rt === rt);
+        const paid = items.filter(item => item.status === 'paid').length;
+        const total = items.length;
+        const percentage = total > 0 ? Math.round((paid / total) * 100) : 0;
+
+        return { rt, paid, total, percentage };
+    });
+});
+
 // Payment Action
 const showPayModal = ref(false);
 const selectedMember = ref<any>(null);
@@ -219,6 +242,42 @@ const formatDate = (dateString: string) => {
                 <span>Kembali</span>
             </button>
 
+            <div class="finance-flow-toolbar">
+                <div>
+                    <p class="section-kicker">Detail pembayaran</p>
+                    <h3>Catat dan pantau status anggota</h3>
+                    <p>Gunakan ringkasan untuk membaca progress, lalu catat pembayaran dari tabel anggota.</p>
+                </div>
+                <div class="toolbar-summary">
+                    <span>{{ paymentProgress.percentage }}%</span>
+                    <small>Nominal terkumpul</small>
+                </div>
+            </div>
+
+            <div class="flow-grid">
+                <div class="flow-step is-active">
+                    <span class="step-number">1</span>
+                    <div>
+                        <strong>Cek tagihan</strong>
+                        <p>Pastikan tipe dan nominal pembayaran sudah sesuai.</p>
+                    </div>
+                </div>
+                <div class="flow-step is-active">
+                    <span class="step-number">2</span>
+                    <div>
+                        <strong>Catat pembayaran</strong>
+                        <p>Input pembayaran full atau cicilan per anggota.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <span class="step-number">3</span>
+                    <div>
+                        <strong>Pantau sisa</strong>
+                        <p>Filter anggota yang belum lunas untuk follow up.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Header Info Card -->
             <BaseCard class="mb-6 header-card">
                 <div class="header-content">
@@ -243,6 +302,52 @@ const formatDate = (dateString: string) => {
                     <div class="header-right text-right">
                         <div class="text-sm text-secondary mb-1">Total Terkumpul</div>
                         <div class="text-3xl font-bold text-primary">{{ formatCurrency(totalCollected) }}</div>
+                    </div>
+                </div>
+            </BaseCard>
+
+            <div class="summary-grid mb-6">
+                <div class="summary-card-item primary">
+                    <Wallet :size="20" />
+                    <span>Terkumpul</span>
+                    <strong>{{ formatCurrency(totalCollected) }}</strong>
+                </div>
+                <div class="summary-card-item">
+                    <AlertCircle :size="20" />
+                    <span>Sisa Tagihan</span>
+                    <strong>{{ formatCurrency(paymentProgress.remaining) }}</strong>
+                </div>
+                <div class="summary-card-item">
+                    <CheckCircle :size="20" />
+                    <span>Lunas</span>
+                    <strong>{{ paymentProgress.paid }}</strong>
+                </div>
+                <div class="summary-card-item">
+                    <ListChecks :size="20" />
+                    <span>Sebagian / Belum</span>
+                    <strong>{{ paymentProgress.partial + paymentProgress.unpaid }}</strong>
+                </div>
+            </div>
+
+            <BaseCard class="rt-monitor-card mb-6" no-padding>
+                <div class="rt-monitor">
+                    <div class="rt-monitor-heading">
+                        <div>
+                            <h3>Rekap per RT</h3>
+                            <p>Lihat area yang pembayaran anggotanya belum penuh.</p>
+                        </div>
+                        <span>{{ paymentProgress.paid }}/{{ paymentProgress.totalMembers }} lunas</span>
+                    </div>
+                    <div class="rt-progress-grid">
+                        <div v-for="item in rtPaymentSummary" :key="item.rt" class="rt-progress-item">
+                            <div class="rt-progress-row">
+                                <strong>RT {{ item.rt }}</strong>
+                                <span>{{ item.paid }}/{{ item.total }}</span>
+                            </div>
+                            <div class="progress-track">
+                                <span :style="{ width: `${item.percentage}%` }"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </BaseCard>
@@ -421,6 +526,9 @@ const formatDate = (dateString: string) => {
 <style scoped>
 .payment-detail-page {
     max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
 }
 
 .btn-back {
@@ -439,6 +547,107 @@ const formatDate = (dateString: string) => {
 
 .btn-back:hover {
     color: var(--color-primary);
+}
+
+.finance-flow-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.finance-flow-toolbar h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 1.1rem;
+}
+
+.finance-flow-toolbar p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.section-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.toolbar-summary {
+  min-width: 142px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-xl);
+  color: #ffffff;
+  background: var(--gradient-primary);
+  text-align: center;
+}
+
+.toolbar-summary span {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.toolbar-summary small {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--text-xs);
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+.flow-step.is-active {
+  border-color: rgba(15, 111, 143, 0.22);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.08), #ffffff);
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: var(--gradient-primary);
+  font-weight: 800;
+  font-size: var(--text-xs);
+}
+
+.flow-step strong {
+  display: block;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.flow-step p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
 }
 
 .header-card {
@@ -515,13 +724,139 @@ const formatDate = (dateString: string) => {
   overflow: hidden;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.summary-card-item {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+  box-shadow: var(--shadow-xs);
+}
+
+.summary-card-item svg {
+  color: var(--color-primary);
+}
+
+.summary-card-item.primary {
+  color: #ffffff;
+  background: var(--gradient-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 30px rgba(15, 111, 143, 0.16);
+}
+
+.summary-card-item.primary svg {
+  color: #ffffff;
+}
+
+.summary-card-item span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.summary-card-item.primary span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.summary-card-item strong {
+  color: var(--color-ink);
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.summary-card-item.primary strong {
+  color: #ffffff;
+}
+
+.rt-monitor-card {
+  border-color: var(--color-border);
+}
+
+.rt-monitor {
+  padding: var(--space-5);
+}
+
+.rt-monitor-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.rt-monitor-heading h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+
+.rt-monitor-heading p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.rt-monitor-heading span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.rt-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.rt-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rt-progress-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.rt-progress-row strong {
+  color: var(--color-ink);
+}
+
+.progress-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eef3;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient-primary);
+  transition: width var(--transition-base);
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(8, 17, 31, 0.52);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -552,6 +887,17 @@ const formatDate = (dateString: string) => {
 }
 
 @media (max-width: 768px) {
+    .finance-flow-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flow-grid,
+    .summary-grid,
+    .rt-progress-grid {
+        grid-template-columns: 1fr;
+    }
+
     .header-content {
         flex-direction: column;
         align-items: flex-start;

@@ -63,7 +63,7 @@ const hasVoted = computed(() => poll.value ? pollsStore.hasUserVoted(poll.value.
 
 // Chart Logic
 const usesPieChart = computed(() => options.value.length <= 2);
-const chartColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const chartColors = ['#0f6f8f', '#ef4444', '#10b981', '#f59e0b', '#16a6d1', '#e11d48', '#06b6d4', '#84cc16'];
 
 const chartData = computed(() => {
   if (!options.value.length) return { labels: [], datasets: [] };

@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import AppShell from '../../../components/AppShell.vue';
 import { usePollsStore } from '../../../stores/polls';
-import { Plus, Eye } from 'lucide-vue-next';
+import { Plus, Eye, Vote } from 'lucide-vue-next';
 
 const router = useRouter();
 const pollsStore = usePollsStore();
@@ -58,7 +58,7 @@ const navigateToDetail = (id: string) => {
     <div class="polls-list-page">
       <!-- Header Actions -->
       <div class="page-actions">
-        <div class="tabs">
+        <div class="tabs" aria-label="Filter status voting">
           <button 
             v-for="tab in [{key:'active',label:'Aktif'},{key:'closed',label:'Ditutup'},{key:'draft',label:'Draf'},{key:'all',label:'Semua'}]" 
             :key="tab.key"
@@ -70,7 +70,7 @@ const navigateToDetail = (id: string) => {
           </button>
         </div>
         
-        <router-link to="/admin/polls/create" class="btn btn-primary">
+        <router-link to="/admin/polls/create" class="btn btn-primary create-button">
           <Plus :size="16" />
           Buat Baru
         </router-link>
@@ -84,9 +84,15 @@ const navigateToDetail = (id: string) => {
 
       <!-- Empty State -->
       <div v-else-if="filteredPolls.length === 0" class="empty-state">
-        <h3>Belum ada data</h3>
-        <p>Belum ada voting atau polling dengan status ini.</p>
-        <router-link to="/admin/polls/create" class="btn btn-primary mt-3">
+        <div class="empty-icon">
+          <Vote :size="28" />
+        </div>
+        <div class="empty-copy">
+          <h3>Belum ada data</h3>
+          <p>Belum ada voting atau polling dengan status ini.</p>
+        </div>
+        <router-link to="/admin/polls/create" class="btn btn-primary">
+          <Plus :size="16" />
           Buat Sekarang
         </router-link>
       </div>
@@ -148,7 +154,9 @@ const navigateToDetail = (id: string) => {
 .polls-list-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  max-width: 1280px;
+  width: 100%;
 }
 
 .page-actions {
@@ -156,33 +164,51 @@ const navigateToDetail = (id: string) => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .tabs {
   display: flex;
-  gap: var(--space-1);
-  background: var(--color-bg-secondary);
-  padding: 3px;
-  border-radius: var(--radius-md);
+  gap: 0.25rem;
+  background: #f5f8fa;
+  padding: 0.25rem;
+  border: 1px solid #dfe7ee;
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
 .tab-btn {
-  padding: 6px 14px;
+  min-width: 82px;
+  padding: 0.62rem 0.95rem;
   border: none;
   background: transparent;
-  color: var(--color-text-secondary);
-  font-weight: 500;
+  color: #667085;
+  font-weight: 650;
   font-size: var(--text-sm);
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
 }
 
 .tab-btn.active {
-  background: var(--color-surface);
+  background: #ffffff;
+  color: var(--color-primary-hover);
+  box-shadow: var(--shadow-xs), inset 0 0 0 1px rgba(15, 111, 143, 0.12);
+}
+
+.tab-btn:hover:not(.active) {
   color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.create-button {
+  min-height: 46px;
+  padding-inline: var(--space-5);
 }
 
 .table-container {
@@ -291,16 +317,50 @@ const navigateToDetail = (id: string) => {
 
 .text-center { text-align: center; }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-12);
+  align-self: stretch;
+  min-height: 320px;
+  padding: var(--space-12) var(--space-6);
   text-align: center;
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border: 1px dashed #cad7e2;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
   color: var(--color-text-secondary);
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-5);
+  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.12), rgba(32, 183, 216, 0.16));
+  box-shadow: 0 14px 30px rgba(15, 111, 143, 0.12);
+}
+
+.empty-copy {
+  margin-bottom: var(--space-5);
+}
+
+.empty-state h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.15rem;
+  color: var(--color-ink);
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 360px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
 }
 
 .spinner {
@@ -314,4 +374,24 @@ const navigateToDetail = (id: string) => {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
+  .page-actions {
+    align-items: stretch;
+  }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: max-content;
+  }
+
+  .create-button {
+    width: 100%;
+  }
+}
 </style>

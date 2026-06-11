@@ -96,7 +96,11 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  background:
+    linear-gradient(90deg, #0f89af 0 18px, transparent 18px),
+    radial-gradient(circle at top left, rgba(32, 183, 216, 0.28), transparent 25rem),
+    radial-gradient(circle at bottom right, rgba(15, 111, 143, 0.18), transparent 22rem),
+    linear-gradient(135deg, #08111f 0%, #0b2035 46%, #0f6f8f 100%);
   padding: var(--space-6);
 }
 
@@ -107,6 +111,11 @@ const handleLogin = async () => {
 
 .login-card {
   padding: var(--space-8);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 26px 72px rgba(8, 17, 31, 0.34);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(18px);
 }
 
 .login-header {
@@ -120,11 +129,12 @@ const handleLogin = async () => {
   object-fit: cover;
   margin: 0 auto var(--space-4);
   display: block;
-  border-radius: 50%;
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(15, 111, 143, 0.24);
 }
 
 .login-header h1 {
-  color: var(--color-primary);
+  color: var(--color-ink);
   margin-bottom: var(--space-2);
 }
 
@@ -142,6 +152,7 @@ const handleLogin = async () => {
   background-color: var(--color-danger-light);
   color: var(--color-danger);
   border-radius: var(--radius-md);
+  border: 1px solid rgba(239, 68, 68, 0.18);
   font-size: var(--text-sm);
   margin-bottom: var(--space-4);
 }

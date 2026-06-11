@@ -40,13 +40,13 @@ const chartData = computed(() => {
       {
         label: 'Jumlah Kehadiran',
         data: props.stats.map(s => s.count),
-        borderColor: '#1e3a8a',
-        backgroundColor: 'rgba(30, 58, 138, 0.1)',
+        borderColor: '#0f6f8f',
+        backgroundColor: 'rgba(15, 111, 143, 0.10)',
         tension: 0.4,
         borderWidth: 3,
         pointRadius: 5,
         pointHoverRadius: 7,
-        pointBackgroundColor: '#1e3a8a',
+        pointBackgroundColor: '#0f6f8f',
         pointBorderColor: '#fff',
         pointBorderWidth: 2
       }

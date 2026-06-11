@@ -338,7 +338,10 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg);
+  background:
+    linear-gradient(90deg, #0f89af 0 18px, transparent 18px),
+    radial-gradient(circle at top left, rgba(32, 183, 216, 0.16), transparent 24rem),
+    var(--color-bg);
   padding: var(--space-6);
 }
 
@@ -349,6 +352,8 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 
 .apply-card {
   padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
 }
 
 .apply-header {
@@ -357,7 +362,7 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 }
 
 .apply-header h1 {
-  color: var(--color-primary);
+  color: var(--color-ink);
   margin-bottom: var(--space-2);
 }
 
@@ -383,19 +388,22 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 .stepper-circle {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg-secondary);
+  background-color: #f7fafc;
   color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
   font-weight: var(--font-weight-semibold);
   transition: all var(--transition-base);
 }
 
 .stepper-item.active .stepper-circle {
-  background-color: var(--color-primary);
+  background: var(--gradient-primary);
   color: white;
+  border-color: transparent;
+  box-shadow: 0 12px 22px rgba(15, 111, 143, 0.18);
 }
 
 .stepper-label {

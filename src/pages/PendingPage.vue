@@ -37,7 +37,10 @@ import { Clock } from 'lucide-vue-next';
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-bg);
+  background:
+    linear-gradient(90deg, #0f89af 0 18px, transparent 18px),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.13), transparent 22rem),
+    var(--color-bg);
   padding: var(--space-6);
 }
 
@@ -49,6 +52,7 @@ import { Clock } from 'lucide-vue-next';
 .pending-card {
   padding: var(--space-10);
   text-align: center;
+  box-shadow: var(--shadow-lg);
 }
 
 .pending-icon {
@@ -59,7 +63,7 @@ import { Clock } from 'lucide-vue-next';
 }
 
 .pending-card h1 {
-  color: var(--color-primary);
+  color: var(--color-ink);
   margin-bottom: var(--space-4);
 }
 
@@ -71,7 +75,8 @@ import { Clock } from 'lucide-vue-next';
 
 .pending-info {
   padding: var(--space-4);
-  background-color: var(--color-bg);
+  background-color: #f7fafc;
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-6);
 }

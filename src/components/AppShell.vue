@@ -91,7 +91,9 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
       <div class="sidebar-header">
         <div class="sidebar-logo-title">
           <img src="/logo.jpg" alt="PRSDN Logo" class="sidebar-logo" />
-          <h2 class="sidebar-title">PRSDN</h2>
+          <div>
+            <h2 class="sidebar-title">PRSDN</h2>
+          </div>
         </div>
         <button @click="toggleSidebar" class="btn-icon-only" title="Close Sidebar">
            <X :size="20" />
@@ -145,7 +147,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
       <div class="sidebar-footer">
         <div class="version-info">
-          <p class="version-number">v1.5.0</p>
+          <p class="version-number">v2.0</p>
         </div>
       </div>
     </aside>
@@ -182,13 +184,14 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 .app-shell {
   display: flex;
   height: 100dvh;
-  background-color: var(--color-bg);
+  background: var(--color-bg);
 }
 
 .sidebar {
   width: var(--sidebar-width);
-  background-color: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.96);
+  border-right: 1px solid rgba(214, 222, 230, 0.95);
+  box-shadow: 10px 0 32px rgba(16, 24, 40, 0.06);
   display: flex;
   flex-direction: column;
   transition: width var(--transition-base), transform var(--transition-base);
@@ -206,9 +209,11 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 .sidebar-header {
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-5);
   height: var(--topbar-height);
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid rgba(214, 222, 230, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -224,18 +229,22 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .sidebar-logo {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(15, 111, 143, 0.18);
 }
 
 .btn-icon-only {
-  background: transparent;
-  border: none;
+  width: 34px;
+  height: 34px;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
   cursor: pointer;
   color: var(--color-text-secondary);
   padding: 0;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,21 +253,31 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .btn-icon-only:hover {
   color: var(--color-primary);
+  border-color: #bfd4dd;
+  background: #f8fbfc;
 }
 
 .sidebar-title {
-  font-size: var(--text-lg);
+  font-size: 1rem;
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  color: var(--color-ink);
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.sidebar-subtitle {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
   white-space: nowrap;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0.35rem;
   overflow-y: auto;
   min-width: var(--sidebar-width);
 }
@@ -268,12 +287,12 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: 0.72rem 0.85rem;
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  color: #465467;
   text-decoration: none;
   font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: 560;
   transition: all var(--transition-base);
   cursor: pointer;
   border: none;
@@ -290,24 +309,30 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 .nav-item:hover {
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+  background: #f4f8fa;
+  color: var(--color-primary);
+  transform: translateX(2px);
 }
 
 .nav-item-active {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(15, 111, 143, 0.12), rgba(32, 183, 216, 0.10));
+  color: var(--color-primary-hover);
+  box-shadow: inset 0 0 0 1px rgba(15, 111, 143, 0.14);
   font-weight: var(--font-weight-semibold);
 }
 
 .nav-child {
-  padding-left: 52px;
+  margin-left: 1.5rem;
+  padding-left: 1rem;
   font-size: 0.9em;
+  border-left: 1px dashed #d6dee6;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .sidebar-footer {
   padding: var(--space-4);
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--color-border);
   min-width: var(--sidebar-width);
 }
 
@@ -315,7 +340,10 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #f7fafc;
+  border: 1px solid var(--color-border-light);
 }
 
 .version-title {
@@ -360,9 +388,11 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .topbar {
   height: var(--topbar-height);
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: 0 var(--space-6);
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(214, 222, 230, 0.9);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  padding: 0 var(--space-8);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -389,7 +419,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 .topbar-page-title {
-  font-size: var(--text-lg);
+  font-size: 1.35rem;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin: 0;
@@ -400,7 +430,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .topbar-page-subtitle {
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  color: #667085;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -415,7 +445,7 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 
 .page-content {
   flex: 1;
-  padding: var(--space-6);
+  padding: var(--space-8);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -423,6 +453,10 @@ const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
 }
 
 @media (max-width: 768px) {
+  .app-shell {
+    background: var(--color-bg);
+  }
+
   .sidebar {
     width: var(--sidebar-width);
     transform: translateX(-100%);

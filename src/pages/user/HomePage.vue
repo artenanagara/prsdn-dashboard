@@ -66,11 +66,13 @@ onMounted(async () => {
     checkinStore.loadCheckins(),
     eventStore.loadEvents(),
     membersStore.loadMembers(false),
+    kasStore.loadPayments(),
     fetchHolidays()
   ]);
   
   checkinStore.subscribeToChanges();
   eventStore.subscribeToChanges();
+  kasStore.subscribeToChanges();
   
   await financeStore.loadTransactions();
   financeStore.subscribeToChanges();
@@ -88,6 +90,10 @@ const fetchHolidays = async () => {
 const member = computed(() => {
   if (!authStore.currentUser?.memberId) return null;
   return membersStore.getMemberById(authStore.currentUser.memberId);
+});
+
+const displayName = computed(() => {
+  return member.value?.fullName || authStore.currentUser?.username || 'Pengguna';
 });
 
 const totalAttendance = computed(() => {
@@ -236,8 +242,31 @@ const showUsernameModal = computed(() => {
 <template>
   <AppShell pageTitle="Beranda" pageSubtitle="Selamat datang di PRSDN Dashboard">
     <div class="user-home-page">
+      <section class="welcome-card">
+        <div>
+          <p class="eyebrow">Dashboard Pengguna</p>
+          <h2>Selamat datang, {{ displayName }}</h2>
+          <p class="hero-copy">Pantau absensi, kas bulanan, dan agenda komunitas dari satu halaman.</p>
+        </div>
+        <div class="welcome-summary">
+          <span>{{ totalAttendance }} kehadiran</span>
+          <span>{{ currentMonthKas?.status === 'paid' ? 'Kas lunas' : 'Kas belum bayar' }}</span>
+        </div>
+      </section>
+
+      <section class="active-event-top">
+        <ActiveEventCard
+          :event="activeEvent"
+          :already-checked-in="alreadyCheckedIn"
+          v-model:token-input="tokenInput"
+          :is-submitting="isSubmitting"
+          :is-token-expired="isTokenExpired"
+          @checkin="handleCheckin"
+        />
+      </section>
+
       <div class="dashboard-grid">
-        <!-- LEFT COLUMN: Stats & Active Event -->
+        <!-- LEFT COLUMN: Stats & Finance -->
         <div class="main-content">
           <!-- Section 1: Stats -->
           <div class="stats-grid mb-6">
@@ -254,16 +283,6 @@ const showUsernameModal = computed(() => {
               icon="💰"
             />
           </div>
-
-          <!-- Section 2: Active Event -->
-          <ActiveEventCard
-            :event="activeEvent"
-            :already-checked-in="alreadyCheckedIn"
-            v-model:token-input="tokenInput"
-            :is-submitting="isSubmitting"
-            :is-token-expired="isTokenExpired"
-            @checkin="handleCheckin"
-          />
 
           <!-- Finance Chart Section -->
           <BaseCard title="Grafik Keuangan" class="mb-6">
@@ -286,6 +305,102 @@ const showUsernameModal = computed(() => {
 </template>
 
 <style scoped>
+.user-home-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.active-event-top {
+  width: 100%;
+}
+
+.welcome-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  border: 1px solid rgba(15, 111, 143, 0.18);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(135deg, rgba(15, 111, 143, 0.12), rgba(255, 255, 255, 0.98));
+  box-shadow: var(--shadow-sm);
+}
+
+.welcome-card h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+
+.welcome-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.welcome-summary span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #344154;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.hero-panel {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background:
+    linear-gradient(135deg, rgba(15, 111, 143, 0.10), rgba(255,255,255,0.98));
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.hero-panel h2 {
+  font-size: 1.35rem;
+  color: var(--color-ink);
+  margin-bottom: 0.35rem;
+}
+
+.hero-copy {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mini-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--color-border);
+  color: #344154;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
 
 .kpi-grid,
 .stats-grid {
@@ -332,6 +447,16 @@ const showUsernameModal = computed(() => {
     height: auto;
     overflow-y: auto; 
     display: block;
+  }
+
+  .welcome-card {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: var(--space-6);
+  }
+
+  .welcome-summary {
+    justify-content: flex-start;
   }
 
   .dashboard-grid {

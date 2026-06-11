@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import type { AttendanceEvent } from '../types';
 import { supabase } from '../lib/supabase';
 
+const TOKEN_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
 // Helper to generate random token (6 chars, A-Z 0-9, excluding ambiguous chars)
 const generateToken = (): string => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude O, I, 0, 1
@@ -66,7 +68,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
         try {
             // Generate initial token when creating event
             const initialToken = generateToken();
-            const tokenExpiresAt = Date.now() + 60000; // 60 seconds (1 minute)
+            const tokenExpiresAt = Date.now() + TOKEN_DURATION_MS;
 
             const { data: insertedData, error } = await (supabase
                 .from('attendance_events') as any)
@@ -158,7 +160,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
 
             // Generate new token when activating
             const newToken = generateToken();
-            const expiresAt = Date.now() + 60000; // 60 seconds (1 minute)
+            const expiresAt = Date.now() + TOKEN_DURATION_MS;
 
             // Activate the selected event with new token
             const { error } = await (supabase
@@ -209,7 +211,7 @@ export const useAttendanceEventStore = defineStore('attendanceEvent', () => {
 
         try {
             const token = generateToken();
-            const expiresAt = Date.now() + 60000; // 60 seconds (1 minute)
+            const expiresAt = Date.now() + TOKEN_DURATION_MS;
 
             const { error } = await (supabase
                 .from('attendance_events') as any)

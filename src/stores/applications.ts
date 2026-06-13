@@ -61,14 +61,10 @@ export const useApplicationsStore = defineStore('applications', () => {
 
     const submitApplication = async (data: Omit<AccountApplication, 'id' | 'status' | 'submittedAt'>): Promise<{ success: boolean; error?: string }> => {
         try {
-            const { usernameTaken, phoneTaken } = await checkDuplicates(data.username, data.step1Data.phone);
+            const { usernameTaken } = await checkDuplicates(data.username, data.step1Data.phone);
 
             if (usernameTaken) {
                 return { success: false, error: 'Username sudah digunakan. Silakan pilih username lain.' };
-            }
-
-            if (phoneTaken) {
-                return { success: false, error: 'Nomor HP ini sudah memiliki akun. Silakan login atau hubungi ketua untuk info username dan password.' };
             }
 
             const { data: existingMembers, error: existingMemberError } = await supabase
@@ -104,13 +100,29 @@ export const useApplicationsStore = defineStore('applications', () => {
 
                 if (memberError) {
                     if (memberError.code === '23505') {
-                        return { success: false, error: 'Nomor HP ini sudah terdaftar. Silakan login atau hubungi ketua untuk info username dan password.' };
+                        const { data: duplicateMembers, error: duplicateLookupError } = await supabase
+                            .from('members')
+                            .select('id')
+                            .eq('phone', data.step1Data.phone)
+                            .limit(1);
+
+                        if (duplicateLookupError) throw duplicateLookupError;
+
+                        memberId = (duplicateMembers?.[0] as any)?.id;
+                        if (memberId) {
+                            createdNewMember = false;
+                        } else {
+                            return { success: false, error: 'Gagal membuat akun. Silakan coba lagi.' };
+                        }
+                    } else {
+                        throw memberError;
                     }
-                    throw memberError;
                 }
 
-                memberId = (memberData as any)?.id;
-                createdNewMember = true;
+                if (!memberId) {
+                    memberId = (memberData as any)?.id;
+                    createdNewMember = true;
+                }
             }
 
             const { error: accountError } = await supabase

@@ -60,17 +60,7 @@ const isCheckingDuplicates = ref(false);
 const nextStep = async () => {
   if (currentStep.value === 1) {
     errors.value = {};
-    isCheckingDuplicates.value = true;
-    try {
-      const { phoneTaken } = await applicationsStore.checkDuplicates('', step1Data.value.phone);
-      if (phoneTaken) {
-        errors.value.phone = 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password';
-        return;
-      }
-      currentStep.value++;
-    } finally {
-      isCheckingDuplicates.value = false;
-    }
+    currentStep.value++;
   } else if (currentStep.value < totalSteps) {
     currentStep.value++;
   }

@@ -61,8 +61,14 @@ export const useApplicationsStore = defineStore('applications', () => {
 
     const submitApplication = async (data: Omit<AccountApplication, 'id' | 'status' | 'submittedAt'>): Promise<{ success: boolean; error?: string }> => {
         try {
-            const { error } = await supabase
-                .from('account_applications')
+            const { usernameTaken, phoneTaken } = await checkDuplicates(data.username, data.step1Data.phone);
+
+            if (usernameTaken || phoneTaken) {
+                return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+            }
+
+            const { data: memberData, error: memberError } = await supabase
+                .from('members')
                 .insert({
                     full_name: data.step1Data.fullName,
                     birth_place: data.step1Data.birthPlace,
@@ -75,27 +81,49 @@ export const useApplicationsStore = defineStore('applications', () => {
                     education_level: data.step1Data.educationLevel,
                     grade: data.step1Data.grade || null,
                     university: data.step1Data.university || null,
-                    joined_whatsapp: data.step1Data.joinedWhatsApp || false,
-                    username: data.username,
-                    password: data.password,
-                    status: 'pending' as const
+                    joined_whatsapp: data.step1Data.joinedWhatsApp || false
                 } as any)
                 .select()
                 .single();
 
-            if (error) {
-                if (error.code === '23505') {
+            if (memberError) {
+                if (memberError.code === '23505') {
                     return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
                 }
-                throw error;
+                throw memberError;
             }
 
+            const memberId = (memberData as any)?.id;
+
+            const { error: accountError } = await supabase
+                .from('user_accounts')
+                .insert({
+                    member_id: memberId,
+                    username: data.username,
+                    password: data.password,
+                    role: 'user' as const,
+                    status: 'active' as const
+                } as any);
+
+            if (accountError) {
+                if (memberId) {
+                    await (supabase.from('members') as any).delete().eq('id', memberId);
+                }
+
+                if (accountError.code === '23505') {
+                    return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+                }
+                throw accountError;
+            }
+
+            const membersStore = useMembersStore();
+            await membersStore.loadMembers();
             await loadApplications();
 
             return { success: true };
         } catch (error) {
-            console.error('Error submitting application:', error);
-            return { success: false, error: 'Gagal mengirim pendaftaran. Silakan coba lagi.' };
+            console.error('Error creating account:', error);
+            return { success: false, error: 'Gagal membuat akun. Silakan coba lagi.' };
         }
     };
 

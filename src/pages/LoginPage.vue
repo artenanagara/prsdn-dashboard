@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { LogIn } from 'lucide-vue-next';
 
@@ -9,15 +9,18 @@ onMounted(() => {
 });
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const username = ref('');
 const password = ref('');
 const error = ref('');
+const successMessage = ref(route.query.registered === '1' ? 'Akun berhasil dibuat. Silakan login dengan username dan password Anda.' : '');
 const isLoading = ref(false);
 
 const handleLogin = async () => {
   error.value = '';
+  successMessage.value = '';
   isLoading.value = true;
 
   const result = await authStore.login(username.value, password.value);
@@ -71,6 +74,10 @@ const handleLogin = async () => {
 
           <div v-if="error" class="error-message">
             {{ error }}
+          </div>
+
+          <div v-if="successMessage" class="success-message">
+            {{ successMessage }}
           </div>
 
           <button type="submit" class="btn btn-primary btn-lg w-full" :disabled="isLoading">
@@ -153,6 +160,16 @@ const handleLogin = async () => {
   color: var(--color-danger);
   border-radius: var(--radius-md);
   border: 1px solid rgba(239, 68, 68, 0.18);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+
+.success-message {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.22);
   font-size: var(--text-sm);
   margin-bottom: var(--space-4);
 }

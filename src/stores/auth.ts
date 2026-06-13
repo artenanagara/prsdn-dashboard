@@ -109,7 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const updateUsername = async (newUsername: string): Promise<{ success: boolean; error?: string }> => {
         if (!currentUser.value?.userId) {
-            return { success: false, error: 'User not authenticated' };
+            return { success: false, error: 'Sesi tidak valid, silakan login ulang' };
         }
 
         // Import validation here to avoid circular dependency
@@ -140,8 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
             }
 
             // Update username
-            const { error: updateError } = await (supabase as any)
-                .from('user_accounts')
+            const { error: updateError } = await (supabase
+                .from('user_accounts') as any)
                 .update({ username: newUsername })
                 .eq('id', currentUser.value.userId);
 
@@ -169,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const updatePassword = async (oldPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
         if (!currentUser.value?.userId) {
-            return { success: false, error: 'User not authenticated' };
+            return { success: false, error: 'Sesi tidak valid, silakan login ulang' };
         }
 
         try {
@@ -180,8 +180,13 @@ export const useAuthStore = defineStore('auth', () => {
                 .eq('id', currentUser.value.userId)
                 .single();
 
-            if (fetchError || !account) {
-                return { success: false, error: 'Failed to verify current password' };
+            if (fetchError) {
+                console.error('Error fetching account for password verification:', fetchError);
+                return { success: false, error: 'Gagal memverifikasi password. Coba login ulang.' };
+            }
+
+            if (!account) {
+                return { success: false, error: 'Akun tidak ditemukan. Coba login ulang.' };
             }
 
             if ((account as any).password !== oldPassword) {
@@ -195,13 +200,14 @@ export const useAuthStore = defineStore('auth', () => {
                 .eq('id', currentUser.value.userId);
 
             if (updateError) {
-                return { success: false, error: 'Failed to update password' };
+                console.error('Error updating password:', updateError);
+                return { success: false, error: 'Gagal menyimpan password baru. Coba lagi.' };
             }
 
             return { success: true };
         } catch (error) {
             console.error('Password update error:', error);
-            return { success: false, error: 'An unexpected error occurred' };
+            return { success: false, error: 'Terjadi kesalahan tidak terduga' };
         }
     };
 

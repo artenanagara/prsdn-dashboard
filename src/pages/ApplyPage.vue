@@ -123,9 +123,9 @@ const handleSubmit = async () => {
 
     const result = await applicationsStore.submitApplication(applicationData);
     if (result.success) {
-      router.push('/pending');
+      router.push({ path: '/login', query: { registered: '1' } });
     } else {
-      errors.value.submit = result.error || 'Gagal mengirim pendaftaran. Silakan coba lagi.';
+      errors.value.submit = result.error || 'Gagal membuat akun. Silakan coba lagi.';
       if (result.error?.includes('Username')) {
         errors.value.username = result.error;
       }
@@ -154,7 +154,7 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
       <div class="apply-card card">
         <div class="apply-header">
           <h1>Pendaftaran Akun</h1>
-          <p>Lengkapi data diri Anda untuk membuat akun</p>
+          <p>Lengkapi data diri. Akun langsung aktif dan bisa digunakan login.</p>
         </div>
 
         <!-- Stepper -->
@@ -318,7 +318,7 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 
           <button v-if="currentStep === totalSteps" @click="handleSubmit" type="button" class="btn btn-primary" :disabled="!canSubmit || isCheckingDuplicates">
             <Check v-if="!isCheckingDuplicates" :size="20" />
-            <span>{{ isCheckingDuplicates ? 'Mengirim...' : 'Kirim Pendaftaran' }}</span>
+            <span>{{ isCheckingDuplicates ? 'Membuat akun...' : 'Buat Akun' }}</span>
           </button>
         </div>
 

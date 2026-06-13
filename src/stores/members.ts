@@ -129,10 +129,13 @@ export const useMembersStore = defineStore('members', () => {
 
             const { error } = await (supabase
                 .from('members') as any)
-                .update(updateData)
+                .update(updateData as any)
                 .eq('id', id);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase update member error:', error.message, error.details, error.hint);
+                throw error;
+            }
 
             await loadMembers();
             return true;

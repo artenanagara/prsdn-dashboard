@@ -62,6 +62,7 @@ const adminNavItems = [
 
 const userNavItems = [
   { path: '/user/home', label: 'Beranda', icon: LayoutDashboard },
+  { path: '/user/members', label: 'Anggota', icon: Users },
   { path: '/user/kas', label: 'Kas Saya', icon: DollarSign },
   { path: '/user/attendance-checkin', label: 'Absensi', icon: ClipboardCheck },
   { path: '/user/polls', label: 'Voting', icon: Vote }

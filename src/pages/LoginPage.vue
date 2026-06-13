@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { LogIn } from 'lucide-vue-next';
+import { Eye, EyeOff, LogIn } from 'lucide-vue-next';
 
 onMounted(() => {
   document.title = 'Login - PRSDN Dashboard';
@@ -17,6 +17,7 @@ const password = ref('');
 const error = ref('');
 const successMessage = ref(route.query.registered === '1' ? 'Akun berhasil dibuat. Silakan login dengan username dan password Anda.' : '');
 const isLoading = ref(false);
+const showPassword = ref(false);
 
 const handleLogin = async () => {
   error.value = '';
@@ -61,15 +62,26 @@ const handleLogin = async () => {
 
           <div class="form-group">
             <label for="password" class="form-label">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              class="form-input"
-              placeholder="Masukkan password"
-              required
-              :disabled="isLoading"
-            />
+            <div class="password-field">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                class="form-input"
+                placeholder="Masukkan password"
+                required
+                :disabled="isLoading"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                @click="showPassword = !showPassword"
+              >
+                <EyeOff v-if="showPassword" :size="18" />
+                <Eye v-else :size="18" />
+              </button>
+            </div>
           </div>
 
           <div v-if="error" class="error-message">
@@ -152,6 +164,36 @@ const handleLogin = async () => {
 
 .login-form {
   margin-bottom: var(--space-6);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field .form-input {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--transition-base), background-color var(--transition-base);
+}
+
+.password-toggle:hover {
+  color: var(--color-primary);
+  background: rgba(15, 111, 143, 0.08);
 }
 
 .error-message {

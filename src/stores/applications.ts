@@ -63,37 +63,55 @@ export const useApplicationsStore = defineStore('applications', () => {
         try {
             const { usernameTaken, phoneTaken } = await checkDuplicates(data.username, data.step1Data.phone);
 
-            if (usernameTaken || phoneTaken) {
-                return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+            if (usernameTaken) {
+                return { success: false, error: 'Username sudah digunakan. Silakan pilih username lain.' };
             }
 
-            const { data: memberData, error: memberError } = await supabase
+            if (phoneTaken) {
+                return { success: false, error: 'Nomor HP ini sudah memiliki akun. Silakan login atau hubungi ketua untuk info username dan password.' };
+            }
+
+            const { data: existingMembers, error: existingMemberError } = await supabase
                 .from('members')
-                .insert({
-                    full_name: data.step1Data.fullName,
-                    birth_place: data.step1Data.birthPlace,
-                    birth_date: data.step1Data.birthDate,
-                    rt: data.step1Data.rt,
-                    phone: data.step1Data.phone,
-                    instagram: data.step1Data.instagram || null,
-                    job: data.step1Data.job || null,
-                    education_status: data.step1Data.educationStatus,
-                    education_level: data.step1Data.educationLevel,
-                    grade: data.step1Data.grade || null,
-                    university: data.step1Data.university || null,
-                    joined_whatsapp: data.step1Data.joinedWhatsApp || false
-                } as any)
-                .select()
-                .single();
+                .select('id')
+                .eq('phone', data.step1Data.phone)
+                .limit(1);
 
-            if (memberError) {
-                if (memberError.code === '23505') {
-                    return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+            if (existingMemberError) throw existingMemberError;
+
+            let memberId = (existingMembers?.[0] as any)?.id;
+            let createdNewMember = false;
+
+            if (!memberId) {
+                const { data: memberData, error: memberError } = await supabase
+                    .from('members')
+                    .insert({
+                        full_name: data.step1Data.fullName,
+                        birth_place: data.step1Data.birthPlace,
+                        birth_date: data.step1Data.birthDate,
+                        rt: data.step1Data.rt,
+                        phone: data.step1Data.phone,
+                        instagram: data.step1Data.instagram || null,
+                        job: data.step1Data.job || null,
+                        education_status: data.step1Data.educationStatus,
+                        education_level: data.step1Data.educationLevel,
+                        grade: data.step1Data.grade || null,
+                        university: data.step1Data.university || null,
+                        joined_whatsapp: data.step1Data.joinedWhatsApp || false
+                    } as any)
+                    .select()
+                    .single();
+
+                if (memberError) {
+                    if (memberError.code === '23505') {
+                        return { success: false, error: 'Nomor HP ini sudah terdaftar. Silakan login atau hubungi ketua untuk info username dan password.' };
+                    }
+                    throw memberError;
                 }
-                throw memberError;
-            }
 
-            const memberId = (memberData as any)?.id;
+                memberId = (memberData as any)?.id;
+                createdNewMember = true;
+            }
 
             const { error: accountError } = await supabase
                 .from('user_accounts')
@@ -106,12 +124,12 @@ export const useApplicationsStore = defineStore('applications', () => {
                 } as any);
 
             if (accountError) {
-                if (memberId) {
+                if (createdNewMember && memberId) {
                     await (supabase.from('members') as any).delete().eq('id', memberId);
                 }
 
                 if (accountError.code === '23505') {
-                    return { success: false, error: 'Data yang digunakan sudah pernah terdaftar, silahkan hubungi ketua untuk info username dan password' };
+                    return { success: false, error: 'Username sudah digunakan. Silakan pilih username lain.' };
                 }
                 throw accountError;
             }
@@ -129,36 +147,39 @@ export const useApplicationsStore = defineStore('applications', () => {
 
     const checkDuplicates = async (username: string, phone: string): Promise<{ usernameTaken: boolean; phoneTaken: boolean }> => {
         try {
-            // Check in account_applications (pending)
-            const { data: appData, error: appError } = await supabase
-                .from('account_applications')
-                .select('username, phone')
-                .or(`username.eq.${username},phone.eq.${phone}`)
-                .neq('status', 'rejected');
+            let usernameTaken = false;
 
-            if (appError) throw appError;
+            if (username) {
+                const { data: userData, error: userError } = await supabase
+                    .from('user_accounts')
+                    .select('username')
+                    .eq('username', username);
 
-            // Cast appData to help TS
-            const apps = (appData || []) as { username: string; phone: string }[];
+                if (userError) throw userError;
 
-            // Check in user_accounts (for username)
-            const { data: userData, error: userError } = await supabase
-                .from('user_accounts')
-                .select('username')
-                .eq('username', username);
+                usernameTaken = (userData?.length || 0) > 0;
+            }
 
-            if (userError) throw userError;
-
-            // Check in members (for phone)
             const { data: memberData, error: memberError } = await supabase
                 .from('members')
-                .select('phone')
+                .select('id')
                 .eq('phone', phone);
 
             if (memberError) throw memberError;
 
-            const usernameTaken = (apps.some(a => a.username === username) || userData?.length > 0);
-            const phoneTaken = (apps.some(a => a.phone === phone) || memberData?.length > 0);
+            const memberIds = ((memberData || []) as Array<{ id: string }>).map(member => member.id);
+            let phoneTaken = false;
+
+            if (memberIds.length > 0) {
+                const { data: accountData, error: accountError } = await supabase
+                    .from('user_accounts')
+                    .select('id')
+                    .in('member_id', memberIds);
+
+                if (accountError) throw accountError;
+
+                phoneTaken = (accountData?.length || 0) > 0;
+            }
 
             return { usernameTaken, phoneTaken };
         } catch (error) {

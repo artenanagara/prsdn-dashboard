@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApplicationsStore } from '../stores/applications';
-import { ChevronRight, ChevronLeft, Check } from 'lucide-vue-next';
+import { ChevronRight, ChevronLeft, Check, Eye, EyeOff } from 'lucide-vue-next';
 import BaseDatePicker from '../components/BaseDatePicker.vue';
 
 const router = useRouter();
@@ -29,6 +29,8 @@ const step1Data = ref({
 const username = ref('');
 const password = ref('');
 const confirmPassword = ref('');
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 // Validation errors
 const errors = ref<Record<string, string>>({});
@@ -290,13 +292,46 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 
           <div class="form-group">
             <label class="form-label">Password *</label>
-            <input v-model="password" type="password" class="form-input" minlength="6" required />
+            <div class="password-field">
+              <input
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                class="form-input"
+                minlength="6"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                @click="showPassword = !showPassword"
+              >
+                <EyeOff v-if="showPassword" :size="18" />
+                <Eye v-else :size="18" />
+              </button>
+            </div>
             <small class="text-xs text-secondary">Minimal 6 karakter</small>
           </div>
 
           <div class="form-group">
             <label class="form-label">Konfirmasi Password *</label>
-            <input v-model="confirmPassword" type="password" class="form-input" required />
+            <div class="password-field">
+              <input
+                v-model="confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                class="form-input"
+                required
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                :aria-label="showConfirmPassword ? 'Sembunyikan konfirmasi password' : 'Tampilkan konfirmasi password'"
+                @click="showConfirmPassword = !showConfirmPassword"
+              >
+                <EyeOff v-if="showConfirmPassword" :size="18" />
+                <Eye v-else :size="18" />
+              </button>
+            </div>
           </div>
 
           <div v-if="errors.submit" class="form-error">
@@ -369,6 +404,36 @@ const handleCapitalize = (field: 'fullName' | 'birthPlace' | 'university', value
 .apply-header p {
   color: var(--color-text-secondary);
   font-size: var(--text-sm);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field .form-input {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--transition-base), background-color var(--transition-base);
+}
+
+.password-toggle:hover {
+  color: var(--color-primary);
+  background: rgba(15, 111, 143, 0.08);
 }
 
 .stepper {

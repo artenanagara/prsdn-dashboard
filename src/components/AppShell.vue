@@ -11,7 +11,7 @@ import {
   ClipboardCheck,
   Vote
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 // Props for page title and subtitle
 const props = defineProps<{
@@ -82,7 +82,7 @@ const toggleMenu = (label: string) => {
   }
 };
 
-const navItems = authStore.isAdmin ? adminNavItems : userNavItems;
+const navItems = computed(() => authStore.isAdmin ? adminNavItems : userNavItems);
 </script>
 
 <template>

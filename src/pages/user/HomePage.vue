@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 import AppShell from '../../components/AppShell.vue';
 import CardStat from '../../components/CardStat.vue';
 import BaseCard from '../../components/BaseCard.vue';
@@ -282,6 +283,14 @@ const showUsernameModal = computed(() => {
               :variant="currentMonthKas?.status === 'paid' ? 'success' : 'warning'"
               icon="💰"
             />
+            <RouterLink to="/user/members" class="stat-link-card">
+              <CardStat
+                title="Data Anggota"
+                :value="`${membersStore.members.length} Orang`"
+                variant="primary"
+                icon="👥"
+              />
+            </RouterLink>
           </div>
 
           <!-- Finance Chart Section -->
@@ -407,6 +416,18 @@ const showUsernameModal = computed(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-6);
+}
+
+.stat-link-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.stat-link-card:focus-visible {
+  outline: 3px solid rgba(15, 111, 143, 0.22);
+  outline-offset: 4px;
+  border-radius: var(--radius-xl);
 }
 
 @media (min-width: 900px) {
